@@ -1,0 +1,36 @@
+#include<iostream>
+ using namespace std;
+ 
+ class Complexz{
+     private:
+        int a, b;
+        
+    public:
+        Complexz(int x=0, int y=0){
+            a=x;
+            b=y;
+        }
+        
+        Complexz operator + (Complexz const &obj){
+            Complexz obj1;
+            
+            obj1.a = a + obj.a;
+            obj1.b = b + obj.b;
+            
+            return obj1;
+        }
+        void print(){
+            cout<< " a = "<<a <<" b = " <<b <<endl;
+        }
+        
+ };
+ 
+ int main(){
+     
+     Complexz a1(1, 1);
+     Complexz a2(2, 2);
+     Complexz a3 = a1+a2;
+     a3.print();
+     
+     
+ }
