@@ -34,3 +34,37 @@
      
      
  }
+ 
+ // Another example of operator overloading :-
+ 
+ #include<iostream>
+
+ using namespace std;
+ 
+ class TestOperator{
+     private:
+        int a, b;
+        
+    public:
+        TestOperator(int x=0, int y=0){
+            a=x;
+            b=y;
+        }
+    void print(){
+        cout <<"a = "<<a <<"b = "<<b<<endl;
+    }
+    friend TestOperator operator + (TestOperator const & , TestOperator const &);
+        
+ };
+ 
+ TestOperator operator + (TestOperator const &obj1, TestOperator const &obj2){
+     return TestOperator(obj1.a+obj2.a, obj1.b+obj2.b);
+ }
+ 
+ int main(){
+     TestOperator obj1(1,2);
+     TestOperator obj2(2,3);
+     TestOperator obj3=obj1+obj2;
+     obj3.print();  
+ }
+ 
