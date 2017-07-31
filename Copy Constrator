@@ -1,0 +1,30 @@
+Copy Constrator Example :- 
+
+#include<iostream>
+
+using namespace std;
+
+class CopyConstor{
+    
+    int a, b;
+    
+    public:
+        CopyConstor(int a, int b){
+            this->a=a;
+            this->b=b;
+            cout<<"a = " <<a <<'\t'<<"b = "<<b<<endl;
+        }
+        
+        CopyConstor(CopyConstor &obj1){
+            a=obj1.a;
+            b=obj1.b;
+            
+            cout<<"Copy a= "<<a <<'\t'<<"b ="<<b<<endl;
+        }
+};
+
+int main(){
+    CopyConstor obj(10,20);
+    CopyConstor obj2(obj);
+    return 0;
+}
