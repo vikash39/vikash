@@ -27,3 +27,44 @@ int main(){
     }
     return 0;
 }
+
+// Other Example of vector 
+
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+int main(){
+    vector<int> vec;
+    cout<<"initial size of vector is ="<<'\t'<<vec.size()<<endl;
+    
+    // insert the element in vector
+    vec.push_back(10);
+    vec.push_back(20);
+    vec.push_back(5);
+    vec.push_back(34);
+    vec.push_back(50);
+    vec.push_back(40);
+    
+    // access the vector elements by iterator
+    vector<int>::iterator v =vec.begin();
+    vector<int>::iterator v2 =vec.end();
+    while(v!= v2){
+        cout<<"Print all elements = "<<'\t'<<*v<<endl;
+        v++;
+    }
+return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
