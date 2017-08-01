@@ -1,0 +1,29 @@
+# Vector Example
+
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+int main(){
+    vector<int> vec;
+    int i;
+    cout<<"Print initial size of the vector ="<<'\t'<<vec.size()<<endl;
+    // Push five element in vector
+    for(i=0;i<5;i++){
+        vec.push_back(i);
+    }
+    cout<<"Print size of the vector after push_back ="<<'\t'<<vec.size()<<endl;
+    for(i=0;i<5;i++){
+        cout<<"Print all element="<<'\t'<<vec[i]<<endl;
+    }
+    // use iterator to access the values
+    vector<int>::iterator v =vec.begin();
+    vector<int>::iterator en =vec.end();
+    while(v!=en){
+        cout<<"value of v = " <<*v <<endl;
+        v++;
+        
+    }
+    return 0;
+}
