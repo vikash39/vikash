@@ -1,0 +1,487 @@
+#include "stdafx.h"
+#include <stdio.h>
+#include <process.h>
+#include <conio.h>
+#include <iostream>
+#include<Windows.h>
+#include <iomanip>
+#include <string>
+#include <fstream>
+#include <cstdlib>
+#include <stdlib.h>
+
+
+void gotoxy(short x, short y) {
+ COORD pos = {x, y};
+ SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+ }
+
+
+
+using namespace std;
+ 
+//void gotoxy(int,int);
+ 
+
+void gotoxytext(int x, int y, const char *str)
+
+{
+
+ 
+
+    gotoxy(x,y);
+
+    cout << str;
+
+}
+
+ 
+
+class CTextModeGrid
+
+{
+
+    int m_left, m_top, m_right, m_bottom;
+
+    int m_numRows, m_numCols;
+
+    int m_arrRowHeight[24], m_arrColWidth[24];
+
+public:
+
+    CTextModeGrid(int l, int t, int r, int b)
+
+    {
+
+      m_left  = l;
+
+        m_top = t;
+
+        m_right = r;
+
+      m_bottom = b;
+
+    }
+
+    void SetRows(int rs) { m_numRows = rs; }
+
+    void SetCols(int cs) { m_numCols = cs; }
+
+    void SetRowHeight(int r, int rh) { m_arrRowHeight[r] = rh; }
+
+    void SetColWidth(int c, int cw) { m_arrColWidth[c] = cw; }
+
+ 
+
+    void DrawGrid();
+
+ 
+
+    void DrawSquare(int left, int top, int right, int bottom);
+
+ 
+
+};
+
+ 
+
+void CTextModeGrid::DrawGrid()
+
+{
+
+      DrawSquare(m_left, m_top, m_right, m_bottom);
+
+ 
+
+      // Draw Vertical Lines
+
+      {
+
+          int pos = m_left;
+
+          for(int i = 0; i < m_numCols; i++)
+
+          {
+
+            pos += m_arrColWidth[i];
+
+            if(pos > m_right)
+
+                pos = m_right;
+
+ 
+
+            for(int j = m_top; j <= m_bottom; j++)
+
+            {
+
+                gotoxy(pos, j);
+
+                cout << (char)(179);
+
+            }
+
+            if(pos == m_left)
+
+            {
+
+                gotoxy(m_left,m_top);
+
+                cout << (char) (218);
+
+                gotoxy(m_left,m_bottom);
+
+                cout << (char) (192);
+
+            }
+
+            else if(pos == m_right)
+
+            {
+
+                gotoxy(m_right,m_top);
+
+                cout << (char) (191);
+
+                gotoxy(m_right,m_bottom);
+
+                cout << (char) (217);
+
+            }
+
+            else
+
+            {
+
+                gotoxy(pos, m_top);
+
+                cout << (char)(194);
+
+ 
+
+                gotoxy(pos, m_bottom);
+
+                cout << (char)(193);
+
+            }
+
+          }
+
+      }
+
+ 
+
+      // Draw Horiz. Lines
+
+      {
+
+          int pos = m_top;
+
+          for(int i = 0; i < m_numRows; i++)
+
+          {
+
+            pos += m_arrRowHeight[i];
+
+            if(pos > m_bottom)
+
+                pos = m_bottom;
+
+ 
+
+            for(int j = m_left; j <= m_right; j++)
+
+            {
+
+                gotoxy(j, pos);
+
+                cout << (char)(196);
+
+ 
+
+                int xpos = m_left;
+
+                for(int k = 0; k < m_numCols; k++)
+
+                {
+
+                  xpos += m_arrColWidth[k];
+
+                  if( xpos == j)
+
+                  {
+
+                      gotoxy(xpos, pos);
+
+                      if(pos == m_bottom)
+
+                      {
+
+                        cout << (char)(193);
+
+                      }
+
+                      else if(pos == m_top)
+
+                      {
+
+                        cout << (char)(194);
+
+                      }
+
+                      else
+
+                      {
+
+                        cout << (char)(197);
+
+                      }
+
+                  }
+
+ 
+
+                }
+
+            }
+
+            if(pos == m_top)
+
+            {
+
+                gotoxy(m_left,m_top);
+
+                cout << (char) (218);
+
+ 
+
+                gotoxy(m_right,m_top);
+
+                cout << (char) (191);
+
+            }
+
+            else if(pos == m_bottom)
+
+            {
+
+                gotoxy(m_left,m_bottom);
+
+                cout << (char) (192);
+
+ 
+
+                gotoxy(m_right,m_bottom);
+
+                cout << (char) (217);
+
+            }
+
+            else
+
+            {
+
+                gotoxy(m_left, pos);
+
+                cout << (char)(195);
+
+ 
+
+                gotoxy(m_right, pos);
+
+                cout << (char)(180);
+
+            }
+
+          }
+
+      }
+
+}
+
+ 
+
+void CTextModeGrid::DrawSquare(int left, int top, int right, int bottom)
+
+{
+
+      { // Horz. Lines
+
+          for(int i = left; i <= right; i++)
+
+          {
+
+            gotoxy(i,top);
+
+            cout << (char) (196);
+
+            gotoxy(i,bottom);
+
+            cout << (char) (196);
+
+          }
+
+      }
+
+      { // Vertical Lines
+
+          for(int i = top; i <= bottom; i++)
+
+          {
+
+            gotoxy(left,i);
+
+            cout << (char)(179);
+
+            gotoxy(right,i);
+
+            cout << (char)(179);
+
+          }
+
+      }
+
+      gotoxy(left,top);
+
+      cout << (char) (218);
+
+ 
+
+      gotoxy(right,top);
+
+      cout << (char) (191);
+
+ 
+
+      gotoxy(left,bottom);
+
+      cout << (char) (192);
+
+ 
+
+      gotoxy(right,bottom);
+
+      cout << (char) (217);
+
+}
+
+ 
+
+int main()
+
+{
+
+	
+	//string filename = "D:\\ITK\\test.docx";
+ 
+   // Write to File
+  // ofstream fout(filename.c_str());
+
+    //system("cls");
+
+	//freopen ("D:\\ITK\\myfile.docx","w",stdout);
+	//printf ("This sentence is redirected to a file.");
+	
+
+   CTextModeGrid g1(1,1,70,21);
+
+ 
+
+    g1.SetRows(3);
+
+    g1.SetRowHeight(0, 4);
+
+    g1.SetRowHeight(1, 14);
+
+    g1.SetRowHeight(2, 3);
+
+ 
+
+    g1.SetCols(5);
+
+    g1.SetColWidth(0, 5);
+
+    g1.SetColWidth(1, 10);
+
+    g1.SetColWidth(2, 25);
+
+    g1.SetColWidth(3, 13);
+
+    g1.SetColWidth(4, 17);   
+
+	 //freopen ("D:\\ITK\\myfile.docx","w",stdout);
+	// printf ("This sentence is redirected to a file.");
+
+    g1.DrawGrid();
+
+ 
+
+    gotoxytext(3,3,"No");
+
+    gotoxytext(9,3,"Item");
+
+    gotoxytext(22,3,"Description");
+
+    gotoxytext(45,3,"Quantity");
+
+    gotoxytext(61,3,"Price");
+
+ 
+
+    gotoxytext(3,7,"1");
+
+    gotoxytext(9,7,"P196");
+
+    gotoxytext(21,7,"Samsung Color TV");
+
+    gotoxytext(48,7,"1");
+
+    gotoxytext(60,7,"$829.00");
+
+   
+
+    gotoxytext(3,8,"2");
+
+    gotoxytext(9,8,"P020");
+
+    gotoxytext(21,8,"MI Note4");
+
+    gotoxytext(48,8,"1");
+
+    gotoxytext(60,8,"$  29.00");
+
+ 
+
+    gotoxytext(3,9,"3");
+
+    gotoxytext(9,9,"P111");
+
+    gotoxytext(21,9,"Folder Blank");
+
+    gotoxytext(48,9,"1");
+
+    gotoxytext(60,9,"$  2.70");
+
+ 
+
+    gotoxy(1,23);
+
+ 
+
+	//string filename = "D:\\ITK\\test.docx";
+ 
+   // Write to File
+   //ofstream fout(filename.c_str());
+
+	
+	//fclose (stdout);
+
+    _getch();
+
+	
+
+ 
+
+    return 0;
+
+}
