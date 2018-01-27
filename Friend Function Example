@@ -1,0 +1,33 @@
+#include<iostream>
+
+using namespace std;
+
+class Complex{
+    
+    private:
+        int a; 
+        int b;
+        
+    public:
+        void setData(int x, int y){
+            a=x;
+            b=y;
+        }
+        void display(){
+            cout<<"a  := "<<a <<" "<<"b := "<<b<<endl;
+        }
+        
+        friend void fun(Complex);
+};
+
+void fun(Complex c){
+    cout<<"a :="<<c.a <<" b := "<<c.b<<endl;
+    cout<<"a + b :="<<c.a+c.b<<endl;
+}
+
+int main(){
+    Complex c1,c2;
+    c1.setData(12,23);
+    c1.display();
+    fun(c1);
+}
