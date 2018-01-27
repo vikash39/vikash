@@ -74,3 +74,48 @@ int main(){
     return 0;
 }
 
+
+
+.................................................................................
+Friend function Example
+#include<iostream>
+
+using namespace std;
+
+class Complex{
+    
+    private:
+        int a, b;
+        
+    public:
+        void setData(int x, int y){a=x;b=y;}
+        void showData(){
+            cout<<"a := "<<a <<" "<<"b := "<<b<<endl;
+        }
+        
+        friend istream& operator>>(istream&, Complex&);
+        friend ostream& operator<<(ostream&, Complex);
+        
+};
+
+istream& operator>>(istream &din, Complex in){
+    cin>>in.a<<in.b<<endl;
+    return(din);
+    
+}
+
+ostream& operator<<(ostream &dout , Complex c){
+    cout<<"a := " <<c.a <<" "<<"b :="<<c.b<<endl;
+    return(dout);
+}
+
+
+
+void main(){
+    Complex obj1;
+    cout<<"Enter your number :"<<endl;
+    cin>>obj1;
+    cout<<"Entered your number :"<<endl;
+    cout<<obj1;
+    //obj1.showData();
+}
