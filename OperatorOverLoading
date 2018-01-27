@@ -1,0 +1,43 @@
+# Operator over loading
+#include<iostream>
+
+using namespace std;
+
+class Complex{
+    private:
+        int a;
+        int b;
+    public:
+        void setData(int x, int y){
+            a=x;
+            b=y;
+        }
+        
+        void display(){
+            cout<<"a := "<<a << " "<<"b := "<<b<<endl;
+        }
+        
+        Complex operator +(Complex c){
+            Complex temp;
+            temp.a=a+c.a;
+            temp.b=b+c.b;
+            return (temp);
+        }
+        Complex operator -(){
+            Complex temp;
+            temp.a=-a;
+            temp.b=-b;
+            return (temp);
+        }
+        
+};
+int main(){
+    Complex c1, c2, c3;
+    c1.setData(1,1);
+    c2.setData(2,2);
+   // c3=c2.add(c1);
+    c3=c2+c1;
+    c3.display();
+    c3=-c1;
+    c3.display();
+}
