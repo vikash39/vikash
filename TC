@@ -1,0 +1,261 @@
+
+#include<tc\tc.h>
+#include<tc\emh.h>
+#include<iostream>
+#include<tccore\tctype.h>
+#include<tccore\aom_prop.h>
+#include<tccore\aom.h>
+#include<tccore\item.h>
+
+using namespace std;
+
+int ITK_user_main(int argc, char* args[]){
+
+	int iStatus = ITK_ok;
+	char* pcError;
+
+	tag_t type_t     = NULLTAG;
+	tag_t crInput_t  = NULLTAG;
+	tag_t objeItem_t = NULLTAG;
+
+	 const char *object_name[] = { "TestItemName" };
+
+	char* pcUserName = ITK_ask_cli_argument("-u=");
+	char* pcPassword = ITK_ask_cli_argument("-p=");
+	char* pcGroup    = ITK_ask_cli_argument("-g=");
+
+	//Login the TC
+	iStatus = ITK_init_module(pcUserName,pcPassword,pcGroup);
+	if(iStatus != ITK_ok){
+		EMH_ask_error_text(iStatus, &pcError);
+		cout<<"Login Error := "<<pcError<<endl;
+		MEM_free(pcError);
+	}else{
+		cout<<"TC Successfully loged in"<<endl;
+	}
+
+	//Create Item
+	iStatus = TCTYPE_find_type("Item","NULLTAG", &type_t);
+
+	if(iStatus != ITK_ok){
+		EMH_ask_error_text(iStatus, &pcError);
+		cout<<"Error during find type "<<pcError<<endl;
+		MEM_free(pcError);
+	}else{
+		cout<<"Type find successfully "<<endl;
+	}
+
+	iStatus = TCTYPE_construct_create_input(type_t, &crInput_t);
+
+	//iStatus = AOM_set_value_string(crInput_t,"object_type","TCItem1");
+	TCTYPE_set_create_display_value(crInput_t, "object_name", 1, object_name);
+
+	iStatus = TCTYPE_create_object(crInput_t, &objeItem_t);
+
+	//iStatus = AOM_save(objeItem_t);
+	iStatus = ITEM_save_item(objeItem_t);
+	cout<<"Saved successfully"<<endl;
+
+	return iStatus;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=========================================================================================================== Above our
+
+Basic ITK(Teamcenter) Programs
+Create Items Sample ITK Program
+
+
+#include<stdio.h>
+#include<tccore/tctype.h>
+#include<tccore/item.h>
+#include<tccore/aom_prop.h>
+
+int ITK_user_main(int argc, char* argv[])
+{
+
+ ITK_auto_login();
+ tag_t item_type_tag = NULLTAG;
+ tag_t itemRev_type_tag = NULLTAG;
+ tag_t item_create_input_tag = NULLTAG;
+ tag_t itemRev_create_input_tag = NULLTAG;
+ tag_t item_tag = NULLTAG;
+ tag_t itemRev_tag = NULLTAG;
+
+ char* next_id = NULL;
+
+ const char *object_name[] = { "TestItemName" };
+ const char *object_desc[] = { "TestItem Description" };
+
+
+ TCTYPE_find_type("Item",  "Item", &item_type_tag);
+ TCTYPE_find_type("ItemRevision","ItemRevision", &itemRev_type_tag);
+ 
+ TCTYPE_construct_create_input (item_type_tag, &item_create_input_tag);
+ TCTYPE_set_create_display_value(item_create_input_tag, "object_name", 1, object_name);
+ TCTYPE_set_create_display_value(item_create_input_tag, "object_desc", 1, object_desc);
+
+ TCTYPE_create_object(item_create_input_tag, &item_tag );
+ ITEM_save_item(item_tag);
+
+ TCTYPE_construct_create_input(itemRev_type_tag,&itemRev_create_input_tag);
+   
+ TCTYPE_set_create_display_value(itemRev_create_input_tag, "object_name", 1, object_name);
+    
+ AOM_set_value_tag(itemRev_create_input_tag, "items_tag", item_tag);
+
+ TCTYPE_create_object(itemRev_create_input_tag, &itemRev_tag);
+ ITEM_save_rev(itemRev_tag);
+
+ ITEM_save_item(item_tag);
+
+ return 0;
+}
+
+========================================================================
+
+Function which will print a error message with the help of iFail received:
+
+#include <stdlib.h>
+#include <tc/tc.h>
+#include <sa/tcfile.h>
+#include <tccore/item.h>
+#include <tc/folder.h>
+#include <tccore/workspaceobject.h>
+#include <ae/ae.h>
+
+#define ITK_CALL(x) {           \
+    int stat;                     \
+    char *err_string;             \
+    if( (stat = (x)) != ITK_ok)   \
+    {                             \
+    EMH_get_error_string (NULLTAG, stat, &err_string);                 \
+    printf ("ERROR: %d ERROR MSG: %s.\n", stat, err_string);           \
+    printf ("FUNCTION: %s\nFILE: %s LINE: %d\n",#x, __FILE__, __LINE__); \
+    if(err_string) MEM_free(err_string);                                \
+    exit (EXIT_FAILURE);                                                   \
+    }                                                                    \
+}
+
+Usage:
+ITK_CALL( ITEM_create_item( item_id, item_name, type_name, rev_id, new_item, new_rev));
+
+========================================================================
+Creating Item and attaching Dataset
+
+#include <stdlib.h>
+#include <tc/tc.h>
+#include <sa/tcfile.h>
+#include <tccore/item.h>
+#include <tc/folder.h>
+#include <tccore/workspaceobject.h>
+#include <ae/ae.h>
+
+#define EXIT_FAILURE 1
+
+static void create_item (char *item_id, tag_t *new_item, tag_t *new_rev)
+{
+    char item_name[ITEM_name_size_c + 1],  type_name[ITEM_type_size_c + 1] = {""}, rev_id[ITEM_id_size_c + 1] = "A";
+       
+    strcpy(item_name, item_id);
+    printf("Creating Item ID: %s\n", item_id);
+    ITEM_create_item( item_id, item_name, type_name, rev_id, new_item, new_rev);
+
+    printf("Saving Item ID: %s\n", item_id);
+    ITEM_save_item(*new_item);
+
+    printf("Attaching Item ID: %s to Newstuff Folder\n", item_id);
+    FL_user_update_newstuff_folder(*new_item);
+}
+
+static void create_dataset(char *type_name, char *name, tag_t item, tag_t rev, tag_t *dataset)
+{
+    char format_name[AE_io_format_size_c + 1] = "BINARY_REF";
+    tag_t  datasettype,  tool;
+   
+    AE_find_datasettype(type_name, &datasettype);
+    if (datasettype == NULLTAG)
+    {
+        printf("Dataset Type %s not found!\n", type_name);
+        exit (EXIT_FAILURE);
+    }
+   
+    AE_ask_datasettype_def_tool(datasettype, &tool);
+   
+    printf("Creating Dataset: %s\n", name);
+    AE_create_dataset(datasettype, name, "", dataset);
+   
+    AE_set_dataset_tool(*dataset, tool));
+    if (strcmp(type_name, "Text")) strcpy(format_name, "TEXT_REF");
+   
+    AE_set_dataset_format(*dataset, format_name);
+    printf("Saving Dataset: %s\n", name);
+    AOM_save(*dataset);
+   
+    /*attach dataset to item revision */
+    ITEM_attach_rev_object(rev, *dataset, ITEM_specification_atth);
+    ITEM_save_item(item);
+
+}
+
+static void do_it(void)
+{
+    char   item_id[ITEM_name_size_c + 1], dataset_name[WSO_name_size_c +1], datasettype_name[AE_datasettype_name_size_c +1];
+    tag_t  new_item, new_rev, dataset;
+         
+    printf("Enter new Item ID: ");
+    gets(item_id);
+   
+    printf("Enter Dataset Type (e.g. UGMASTER, UGPART, Text): ");
+    gets(datasettype_name);
+   
+    strcpy(dataset_name, item_id);
+    strcat(dataset_name, "/A");   
+  
+    create_item(item_id, &new_item, &new_rev);
+    create_dataset(datasettype_name, dataset_name, new_item, new_rev, &dataset);
+
+    AOM_unload(dataset);
+    AOM_unload(new_rev);
+    AOM_unload(new_item);
+}
+
+
+int ITK_user_main(int argc, char* argv[])
+{
+    int status = 0;
+    char *message;
+   
+    ITK_initialize_text_services( 0 );
+    status = ITK_auto_login();
+  
+    if (  (status != ITK_ok))
+ {
+  printf("iMAN login NOT successful.\n");
+ }
+    else
+    {
+        printf("iMAN login successful.\n");
+        ITK_set_journalling(TRUE);
+        do_it();
+    }
+ 
+    ITK_exit_module(TRUE);
+    return status;
+}
+========================================================================
