@@ -1,0 +1,237 @@
+#include<tc\tc.h>
+#include<tc\emh.h>
+#include<iostream>
+#include<tccore\tctype.h>
+#include<tccore\aom_prop.h>
+#include<tccore\aom.h>
+#include<tccore\item.h>
+#include<sa\user.h>
+#include<tc\folder.h>
+#include<tccore\grm.h>
+
+using namespace std;
+
+int ITK_user_main(int argc, char* args[]){
+
+	int iStatus = ITK_ok;
+	char* pcError;
+
+	tag_t type_t         = NULLTAG;
+	tag_t crInput_t      = NULLTAG;
+	tag_t objeItem_t     = NULLTAG;
+	tag_t user_t         = NULLTAG;
+	tag_t homeFolder_t   = NULLTAG;
+	tag_t folder_t       = NULLTAG;
+	tag_t fInput_t       = NULLTAG;
+	tag_t flObj_t        = NULLTAG;
+	tag_t form_t         = NULLTAG;
+	tag_t formInput_t    = NULLTAG;
+	tag_t formObj_t      = NULLTAG;
+	tag_t itemRev_t      = NULLTAG;
+	tag_t relationType_t = NULLTAG;
+	tag_t grmRelation_t  = NULLTAG;
+
+	// const char *object_name[] = { "TestItemName" };
+	// const char *object_desc[] = { "TestItem Description" };
+	
+
+	char* pcUserName = ITK_ask_cli_argument("-u=");
+	char* pcPassword = ITK_ask_cli_argument("-p=");
+	char* pcGroup    = ITK_ask_cli_argument("-g=");
+
+	//Login the TC
+	iStatus = ITK_init_module(pcUserName,pcPassword,pcGroup);
+	if(iStatus != ITK_ok){
+		EMH_ask_error_text(iStatus, &pcError);
+		cout<<"Login Error := "<<pcError<<endl;
+		MEM_free(pcError);
+	}else{
+		cout<<"TC Successfully loged in"<<endl;
+	}
+
+	//..............................................................................................
+	// Find User
+
+	iStatus = SA_find_user2(pcUserName,&user_t);
+	if(iStatus != ITK_ok){
+		EMH_ask_error_text(iStatus, &pcError);
+		cout<<"Error didn't find user id  "<<pcError<<endl;
+		MEM_free(pcError);
+	}else{
+		AOM_ask_name(user_t, &pcUserName);
+		cout<<"User id find successfully"<<pcUserName<<endl;
+	}
+	// Attached in home folder
+	iStatus = SA_ask_user_home_folder(user_t, &homeFolder_t);
+
+    //..............................................................................................
+	//Create Folder
+	iStatus = TCTYPE_find_type("Folder","Folder", &folder_t);
+	iStatus = TCTYPE_construct_create_input(folder_t, &fInput_t);
+	iStatus = AOM_set_value_string(fInput_t,"object_name","NewFolder5");
+	iStatus = TCTYPE_create_object(fInput_t,&flObj_t);
+	iStatus = FL_insert(homeFolder_t,flObj_t,999);
+	iStatus = AOM_refresh(flObj_t,0);
+	AOM_save(flObj_t);
+	iStatus = AOM_save(homeFolder_t);
+	
+
+    //................................................................................................
+	//Create Item
+	iStatus = TCTYPE_find_type("Item","NULLTAG", &type_t);
+
+	if(iStatus != ITK_ok){
+		EMH_ask_error_text(iStatus, &pcError);
+		cout<<"Error during find type "<<pcError<<endl;
+		MEM_free(pcError);
+	}else{
+		cout<<"Type find successfully "<<endl;
+	}
+
+	iStatus = TCTYPE_construct_create_input(type_t, &crInput_t);
+
+	iStatus = AOM_set_value_string(crInput_t,"object_name","TCItem19");
+	//TCTYPE_set_create_display_value(crInput_t, "object_name", 1, object_name);
+	//TCTYPE_set_create_display_value(crInput_t, "object_desc", 1, object_desc);
+
+	iStatus = TCTYPE_create_object(crInput_t, &objeItem_t);
+	iStatus = FL_insert(flObj_t,objeItem_t,000);
+	//iStatus = AOM_save(flObj_t);
+	iStatus = AOM_refresh(objeItem_t,0);
+	iStatus = ITEM_save_item(objeItem_t);
+	iStatus = AOM_save(flObj_t);
+	
+	cout<<"Saved successfully"<<endl;
+	//............................................................................................
+	//Create the form & attached under the itemRevision
+
+	iStatus = TCTYPE_find_type("Form","Form",&form_t);
+	iStatus = TCTYPE_construct_create_input(form_t, &formInput_t);
+	iStatus = AOM_set_value_string(formInput_t,"object_name","FormOne");
+	iStatus = TCTYPE_create_object(formInput_t, &formObj_t);
+	iStatus = AOM_save(formObj_t);
+
+	//iStatus = FL_insert(homeFolder_t,formObj_t,999);
+	//iStatus = AOM_save(homeFolder_t);
+
+	//..............................................................................................
+	//Find the relation
+
+	iStatus = GRM_find_relation_type("IMAN_specification", &relationType_t);
+	GRM_save_relation(relationType_t);
+
+
+
+	//...............................................................................................
+	// Create the GRM Relation
+	iStatus = ITEM_find_revision(objeItem_t,"A",&itemRev_t);
+	iStatus = GRM_create_relation(itemRev_t,formObj_t,relationType_t,NULLTAG,&grmRelation_t);
+	iStatus = GRM_save_relation(grmRelation_t);
+	
+
+	return iStatus;
+
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+#include<tc\tc.h>
+#include<sa\user.h>
+#include<tc\emh.h>
+#include<tccore\aom.h>
+#include<tccore\item.h>
+#include<bom\bom.h>
+#include<tccore\aom_prop.h>
+
+void traverse_BOM(tag_t bomtopline_tag);
+
+using namespace std;
+
+
+int ITK_user_main(int argc, char **argv){
+
+	int iStatus					= ITK_ok;
+	tag_t item_tag				= NULLTAG;
+	tag_t* childrens_tag		= NULLTAG;
+	tag_t user_tag				= NULLTAG;
+	tag_t top_bom_line_tag		= NULLTAG;  
+	tag_t relationTag			= NULLTAG;
+	tag_t rev_tag               = NULLTAG;
+	tag_t bom_Window_tag        = NULLTAG;
+	
+
+	char *pcError       = NULL;
+	char * user_name	= NULL;
+	char *pcUserId      = ITK_ask_cli_argument("-u=");
+	char *pcPaswd		= ITK_ask_cli_argument("-p=");
+	char *pcGrp         = ITK_ask_cli_argument("-g=");
+	char *Itemid        = ITK_ask_cli_argument("-id=");
+	char *RevId         = ITK_ask_cli_argument("-revid=");
+
+	
+	
+
+	iStatus = ITK_auto_login();
+
+	printf(" Login TC successfully =%d ",iStatus);
+
+	//BOM Create Window
+
+	 iStatus = BOM_create_window(&bom_Window_tag);
+
+	//Find ItemRevision
+
+	iStatus = ITEM_find_rev	(Itemid,RevId,&rev_tag	);
+
+	if (iStatus > 0)
+	{
+		EMH_ask_error_text(iStatus, &pcError);
+		printf("\n Save Item : %d : %s", iStatus, pcError);
+		printf("error");
+	}
+	else
+	{ 
+		printf("\n Successfully find Item_Revision");
+	}
+	
+	 
+	 // BOM set window top line
+	 iStatus = BOM_set_window_top_line(bom_Window_tag ,item_tag ,rev_tag ,NULLTAG,&top_bom_line_tag);
+     traverse_BOM(top_bom_line_tag);
+		
+	//exit module
+	iStatus = ITK_exit_module(TRUE);
+	return iStatus;
+
+}
+
+void traverse_BOM(tag_t top_bom_line_tag){
+
+	tag_t* children_tag  = NULLTAG;
+
+	int iStatus			 = ITK_ok;
+	int   count          = 0;
+	char* item_id        = NULL;
+	char* item_name      = NULL;
+	char* item_rev       = NULL;
+
+	 //BOM line ask child line
+
+	 iStatus = AOM_ask_value_string(top_bom_line_tag,"bl_item_item_id",&item_id);
+	 iStatus = AOM_ask_value_string(top_bom_line_tag,"bl_item_object_name",&item_name);
+	 iStatus = AOM_ask_value_string(top_bom_line_tag,"bl_rev_item_revision_id",&item_rev);	
+
+	 printf("\n Item Id , item name & revision id %s :  %s      : %s   ",item_id, item_name, item_rev );
+
+	 iStatus = BOM_line_ask_child_lines(top_bom_line_tag , &count, &children_tag);
+	 if(count>0)
+		for(int i=0;i<count; i++)
+		{
+				traverse_BOM(children_tag[i]);
+		}
+		
+}
+
