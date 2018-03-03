@@ -1,0 +1,99 @@
+1. Type casting, Primitive data type into class type
+..........................................................................................................................................
+#include<iostream>
+
+using namespace std;
+
+ class Complex{
+     
+      private :
+                int a; 
+                int b; 
+    public :
+             Complex(){}      //calling constructor
+            Complex(int z){  //Type casting 
+                  a=z;
+                  b=0;
+           }
+            int showdata(){
+                cout<<"a " <<a<<" b "<<b<<endl;
+            }
+ };
+ 
+ int main(){
+     Complex c1;
+     int x=5;
+     c1=x;
+     c1.showdata();
+     return 0;
+ }
+ ..................................................................................................................................
+ 
+ 
+ 2. Type casting, class type into Primitive data type.
+ 
+ #include<iostream>
+
+using namespace std;
+
+ class Complex{
+     
+      private :
+                int a; 
+                int b;
+    
+    public :
+             
+            void setData(int x, int y){
+                a=x;
+                b=y;
+            }
+            void showdata(){
+                cout<<"a " <<a<<" b "<<b<<endl;
+            }
+            
+            operator int(){
+                return (a);
+            }
+ };
+ 
+ int main(){
+     Complex c1;
+     c1.setData(2,4);
+     c1.showdata();
+     int x;
+     x=c1; //Type casting here class type into integer type(primitive type)
+     cout<<"x "<<x<<endl;
+     return 0;
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
