@@ -67,7 +67,60 @@ using namespace std;
      return 0;
  }
  
- 
+//........................................................................................................................
+Type casting one class type into another type cast
+
+#include<iostream>
+
+using namespace std;
+
+class Product{
+    
+    private:
+        int m;
+        int n;
+        
+    public:
+        int getM(){
+            return m;
+        }
+        int getN(){
+            return n;
+        }
+        void setData(int x, int y){
+            m=x;
+            n=y;
+        }
+};
+
+class Item{
+    private:
+        int a;
+        int b;
+        
+    public:
+    
+        Item(){}
+        Item(Product p){
+            a=p.getM();
+            b=p.getN();
+        }
+    
+        void showData(){
+            cout<<"a ="<<a<<"b = "<<b<<endl;
+        }
+        
+};
+
+int main(){
+    Item i1;
+    Product p1;
+    p1.setData(2,3);
+    i1=p1;
+    i1.showData();
+    
+    return 0;
+}
  
  
  
