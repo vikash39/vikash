@@ -1,4 +1,147 @@
 #include<tc\tc.h>
+#include<bom\bom.h>
+#include<tccore\item.h>
+#include<ps\ps.h>
+#include<tccore\aom.h>
+#include<iostream>
+
+using namespace std;
+
+int ITK_user_main(int argc , char* args[]){
+
+	int iStatus = ITK_ok;
+
+	tag_t window_t        = NULLTAG;
+	tag_t Window1_t       = NULLTAG;
+	tag_t pRev_t          = NULLTAG;
+	tag_t cRev1_t         = NULLTAG;
+	tag_t cRev2_t         = NULLTAG;
+	tag_t cRev3_t         = NULLTAG;
+	tag_t pItem_t         = NULLTAG;
+	tag_t view_t          = NULLTAG;
+	tag_t psBomV_t        = NULLTAG;
+	tag_t newlyBOM_t	  = NULLTAG;
+	tag_t bomSetTopLine_t = NULLTAG;
+	tag_t cAddBomLine_t   = NULLTAG;
+	tag_t cAddBomLine1_t  = NULLTAG;
+	tag_t item1_t         = NULLTAG;
+	tag_t view1_t         = NULLTAG;
+	tag_t bomView1_t      = NULLTAG;
+	tag_t newbomrev1_t    = NULLTAG;
+	tag_t topBomlineChild_t = NULLTAG;
+	tag_t BOMLinechild2_t = NULLTAG; 
+
+	char* pcError = NULL;
+
+	char* userId     = ITK_ask_cli_argument("-u=");
+	char* userPass   = ITK_ask_cli_argument("-p=");
+	char* group      = ITK_ask_cli_argument("-g=");
+	char* pItem      = ITK_ask_cli_argument("-pItem=");
+	char* cItem1     = ITK_ask_cli_argument("-cItem1=");
+	char* cItem2     = ITK_ask_cli_argument("-cItem2=");
+	char* cItem3     = ITK_ask_cli_argument("-cItem3=");
+
+	iStatus = ITK_auto_login();
+
+	
+	//Find Item Revision
+	iStatus = ITEM_find_rev(pItem,  "A",&pRev_t);
+	iStatus = ITEM_find_rev(cItem1, "A",&cRev1_t);
+	iStatus = ITEM_find_rev(cItem2, "A",&cRev2_t);
+	iStatus = ITEM_find_rev(cItem3, "A",&cRev3_t);
+
+	//Create BOM window tag
+	iStatus = BOM_create_window(&window_t);
+
+	//Find Item tag
+	iStatus = ITEM_find_item(pItem,&pItem_t);
+	AOM_save(pItem_t);
+
+	// find view type
+	iStatus = PS_find_view_type("view",&view_t);
+	AOM_save(view_t);
+
+	//Create BOM view
+	iStatus = PS_create_bom_view(view_t,"view","Custome View",pItem_t,&psBomV_t);
+	AOM_save(psBomV_t);
+
+	//Create ps bvr
+	iStatus = PS_create_bvr(psBomV_t,NULL,NULL,FALSE,pRev_t,&newlyBOM_t);
+	 AOM_save(newlyBOM_t);
+
+    // BOM set window top line
+	 iStatus = BOM_set_window_top_line(window_t, pItem_t, pRev_t, psBomV_t, &bomSetTopLine_t);
+
+	 // Add BOM Line in BOM Windown
+	 iStatus = BOM_line_add(bomSetTopLine_t,NULLTAG,cRev1_t,NULLTAG,&cAddBomLine_t);
+	 iStatus = BOM_line_add(bomSetTopLine_t,NULLTAG,cRev2_t,NULLTAG,&cAddBomLine1_t);
+
+	  AOM_save(bomSetTopLine_t);
+	  AOM_save(cAddBomLine_t);
+	  AOM_save(cAddBomLine1_t);
+	 
+	  AOM_save(cRev1_t);
+	  AOM_save(cRev2_t);
+
+	  BOM_save_window(window_t);
+	  BOM_close_window(window_t);
+
+	  //.................Adding child in BOM Structure....................
+	  //Find item Tag 
+	  iStatus = ITEM_find_item(cItem1, &item1_t);
+
+	  iStatus = PS_find_view_type("view",&view1_t);
+
+	  iStatus = PS_create_bom_view(view1_t,NULL,NULL,item1_t,&bomView1_t);
+	  AOM_save(bomView1_t);
+	  AOM_save(item1_t);
+
+	  PS_create_bvr(bomView1_t,NULL,NULL,FALSE,cRev1_t,&newbomrev1_t);
+	  AOM_save(newbomrev1_t);
+	  AOM_save(cRev1_t); 
+
+	  iStatus = BOM_create_window(&Window1_t);
+	  iStatus = BOM_set_window_top_line(Window1_t ,item1_t ,cRev1_t ,bomView1_t,&topBomlineChild_t);
+	 cout<<"Status "<<iStatus<<endl; 
+
+	 iStatus = BOM_line_add(topBomlineChild_t, NULLTAG,cRev3_t,NULLTAG,&BOMLinechild2_t);
+	 AOM_save(BOMLinechild2_t);
+
+	  AOM_save(cRev3_t);
+	  AOM_save(cRev1_t);
+
+	   // Save BOM Window
+	 BOM_save_window(Window1_t);
+
+	 BOM_close_window(Window1_t); 
+
+	 return iStatus;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//......................................................................................................................................
+
+#include<tc\tc.h>
 #include<sa\user.h>
 #include<tccore\aom.h>
 #include<bom\bom.h>
