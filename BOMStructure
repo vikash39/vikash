@@ -1,0 +1,148 @@
+#include<tc\tc.h>
+#include<sa\user.h>
+#include<tccore\aom.h>
+#include<bom\bom.h>
+#include<ps\ps.h>
+#include<iostream>
+#include<tccore\item.h>
+
+
+using namespace std;
+
+int ITK_user_main(int argc, char* args[]){
+
+	int iStatus            = ITK_ok;
+
+
+	tag_t bom_Window_tag    = NULLTAG;
+	tag_t item_tag          = NULLTAG;
+	tag_t rev_tag           = NULLTAG;
+	tag_t top_bom_line_tag  = NULLTAG;
+	tag_t add_BOM_line_tag  = NULLTAG;
+	tag_t new_itemRev_tag   = NULLTAG;
+	tag_t rev_tag1          = NULLTAG;
+	tag_t BOMLine_child_tag = NULLTAG;
+	tag_t rev_tag2          = NULLTAG;
+	tag_t bomView_tag       = NULLTAG;
+	tag_t view_tag          = NULLTAG;
+	tag_t newbomrev         = NULLTAG;
+	tag_t rev_tag3          = NULLTAG;
+	tag_t item_tag3         = NULLTAG;
+	tag_t view1_tag         = NULLTAG;
+	tag_t bomView1_tag      = NULLTAG;
+	tag_t newbomrev1        = NULLTAG;
+	tag_t BOMLine_child2child_tag = NULLTAG;
+	tag_t top_bom_line_Child_tag = NULLTAG;
+	//tag_t item_tag1         = NULLTAG;
+	//char* Itemid = NULL;
+	//char* RevId  = NULL;
+
+	char *pcUserId      = ITK_ask_cli_argument("-u=");
+	char *pcPaswd		= ITK_ask_cli_argument("-p=");
+	char *pcGrp         = ITK_ask_cli_argument("-g=");
+	char *Itemid        = ITK_ask_cli_argument("-id=");
+	//char *RevId         = ITK_ask_cli_argument("-revid=");
+	char *NewId         = ITK_ask_cli_argument("-newitem=");
+	char *NewId1        = ITK_ask_cli_argument("-newitem1=");
+	char *NewId3        = ITK_ask_cli_argument("-NewId3=");
+
+	char*name=NULL;
+	iStatus = ITK_auto_login();
+	printf(" Login TC successfully =%d ",iStatus);
+
+	 //BOM Create Window
+	 iStatus = BOM_create_window(&bom_Window_tag);
+
+	 // Find itemRevison
+	 iStatus = ITEM_find_rev(Itemid, "A", &rev_tag);
+	 iStatus = ITEM_find_rev(NewId, "A", &rev_tag1);
+     iStatus = ITEM_find_rev(NewId1, "A", &rev_tag2);
+	 iStatus = ITEM_find_rev(NewId3, "A", &rev_tag3);
+
+		 if(rev_tag1!=NULLTAG)
+		 AOM_ask_name(rev_tag,&name);
+		 printf("\n new rev is found %s:",name);
+
+		 //Find item Tag
+		 iStatus = ITEM_find_item(Itemid, &item_tag);
+
+		  AOM_ask_name(item_tag,&name);
+		   printf("\n new item is found %s:",name);
+
+		 //Create BOMView
+		 //iStatus = PS_ask_default_view_type(&view_tag);
+		 //AOM_refresh(rev_tag,true);
+
+
+		 PS_find_view_type("view",&view_tag);
+				
+		 
+		 iStatus = PS_create_bom_view(view_tag,NULL,NULL,item_tag,&bomView_tag);
+		 AOM_save(bomView_tag);
+		 
+		 //AOM_refresh(rev_tag,false);
+		  AOM_save(item_tag);
+
+		 PS_create_bvr(bomView_tag,NULL,NULL,FALSE,rev_tag,&newbomrev);
+		   AOM_save(newbomrev);
+			    AOM_save(rev_tag);
+
+				
+
+
+		 
+
+	 // BOM set window top line
+	 iStatus = BOM_set_window_top_line(bom_Window_tag ,item_tag ,rev_tag ,bomView_tag,&top_bom_line_tag);
+	 cout<<"Status "<<iStatus<<endl;
+
+	 // Add BOM Line in BOM Windown
+	 iStatus = BOM_line_add(top_bom_line_tag, NULLTAG,rev_tag1,NULLTAG,&add_BOM_line_tag);
+	 iStatus = BOM_line_add(top_bom_line_tag, NULLTAG,rev_tag2,NULLTAG,&BOMLine_child_tag);
+	 
+	 AOM_save(add_BOM_line_tag);
+	 AOM_save(BOMLine_child_tag);
+	  BOM_save_window(bom_Window_tag);
+
+	 BOM_close_window(bom_Window_tag);
+	 //.................................................................................................
+	 //Find item Tag 
+	 
+		iStatus = ITEM_find_item(NewId, &item_tag3);
+
+		 AOM_ask_name(item_tag3,&name);
+		   printf("\n new item is found %s:",name);
+
+		    PS_find_view_type("view",&view1_tag);
+				
+		 
+		 iStatus = PS_create_bom_view(view1_tag,NULL,NULL,item_tag3,&bomView1_tag);
+		 AOM_save(bomView1_tag);
+		 
+		 //AOM_refresh(rev_tag,false);
+		  AOM_save(item_tag3);
+
+		 PS_create_bvr(bomView1_tag,NULL,NULL,FALSE,rev_tag1,&newbomrev1);
+		 AOM_save(newbomrev1);
+		 AOM_save(rev_tag1); 
+//...................................................................................................
+	  iStatus = BOM_create_window(&bom_Window_tag);
+      // BOM set window top line
+	 iStatus = BOM_set_window_top_line(bom_Window_tag ,NULLTAG ,rev_tag2 ,NULLTAG,&top_bom_line_Child_tag);
+	 cout<<"Status "<<iStatus<<endl; 
+
+	 iStatus = BOM_line_add(top_bom_line_Child_tag, NULLTAG,rev_tag3,NULLTAG,&BOMLine_child2child_tag);
+	 AOM_save(BOMLine_child2child_tag);
+	 
+	 
+	
+	   AOM_save(rev_tag3);
+	     AOM_save(rev_tag1);
+
+	 // Save BOM Window
+	 BOM_save_window(bom_Window_tag);
+
+	 BOM_close_window(bom_Window_tag);
+
+	 return iStatus;
+}
