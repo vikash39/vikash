@@ -1,0 +1,58 @@
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class TestTravBomLineStru extends AbstractHandler {
+
+	@Override
+    public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		
+		TCComponentBOMLine bomLineTarget =(TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+		TCSession session = bomLineTarget.getSession();
+	    try {
+			AIFComponentContext[] child = bomLineTarget.getChildren();
+			for(int i=0;i<child.length;i++){
+				TCComponentBOMLine children = (TCComponentBOMLine) child[i].getComponent();
+				System.out.println("Child1  "+child[i]);
+				getChildren2(children);
+			}
+			
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return null;
+	}
+	
+	public void getChildren2(TCComponentBOMLine bomLineTarget ){
+		
+		try {
+			AIFComponentContext[] child2 = bomLineTarget.getChildren();
+			
+			for(int i=0;i<child2.length;i++){
+				TCComponentBOMLine nextChild1=(TCComponentBOMLine)child2[i].getComponent();
+				System.out.println("Child2  "+child2[i]);
+				if(child2.length>0)
+					for(int j=0;j<child2.length;j++){
+						getChildren2(nextChild1);
+					}
+	
+			}
+					
+			
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+}
