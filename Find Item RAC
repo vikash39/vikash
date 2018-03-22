@@ -1,0 +1,40 @@
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemType;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class Traverse extends AbstractHandler{
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		
+		
+		// TODO Auto-generated method stub
+		TCComponent tcObject = (TCComponent)AIFUtility.getCurrentApplication().getTargetComponent();
+		  // TCComponentItemType itemIdRev = (TCComponentItemType) tcObject;
+		 TCSession session = tcObject.getSession();
+		   TCComponentItemType tItemType;
+		try {
+			tItemType = (TCComponentItemType) session.getTypeComponent("Item");
+			TCComponentItem tItem = tItemType.find("03-000018-01");
+			if(tItem instanceof TCComponentItem){
+				System.out.println("Successfully find the item  .....  = "+tItem);
+			}
+			
+		} catch (TCException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		   
+		return null;
+	}
+
+}
