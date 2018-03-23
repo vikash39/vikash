@@ -1,0 +1,508 @@
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.swt.SWT;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.handlers.HandlerUtil;
+
+import com.tc.dialogbox.MyDialogBox;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class CrPrototype extends AbstractHandler{
+
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		// TODO Auto-generated method stub
+		TCSession tcSesion = (TCSession)AIFUtility.getCurrentApplication().getSession();
+		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+		
+		InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+		 TCComponentBOMLine tcBomLine=(TCComponentBOMLine)tgrget;
+		/*
+		 
+		try {
+			
+			TCComponentItemRevision itemRev = tcBomLine.getItemRevision();
+			TCComponentItem item = itemRev.getItem();
+			String str = item.getNewID();
+
+			TCComponentItem itemq = itemRev.saveAsItem(str, "NULL");
+			
+			TCComponentUser user = tcSesion.getUser();
+			TCComponentFolder home = user.getHomeFolder();
+		    TCComponentFolder fold = home.getNewStuffFolder(tcSesion);
+		    fold.add("contents", itemq);
+		    
+		    //.........................................................................
+		   
+		   // TCComponentBOMLine parentId = tcBomLine.parent();
+		   // String itemid = parentId.getProperty("bl_item_item_id");
+		    //System.out.println(itemid);
+
+		    //.........................................................................
+		    
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} */
+		
+		 CreateSPMBOM newDialog = new CreateSPMBOM(window.getShell(),SWT.DIALOG_TRIM,tcBomLine);
+		 newDialog.open();
+		return null;
+	}
+
+	private void getNewStuffFolder(TCSession tcSesion) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}
+
+
+
+
+
+///.....................................................................
+UI part
+
+
+
+package com.tc.structurem.prototype;
+
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.custom.ControlEditor;
+import org.eclipse.swt.custom.TableCursor;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.widgets.TableItem;
+
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentBOMView;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentItemRevisionType;
+import com.teamcenter.rac.kernel.TCComponentItemType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class CreateSPMBOM extends Dialog {
+
+	protected Object result;
+	protected Shell shell;
+	private Text text;
+	private Text text_1;
+	private Table table;
+	
+	 TCSession tcSesion = (TCSession)AIFUtility.getCurrentApplication().getSession();
+	 InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+	 TCComponentBOMLine tcBomline1=(TCComponentBOMLine)tgrget;
+
+	 TCComponentBOMLine tcBomline;
+	 
+
+	/**
+	 * Create the dialog.
+	 * @param parent
+	 * @param style
+	 */
+	public CreateSPMBOM(Shell parent, int style, TCComponentBOMLine tcBomline) {
+		super(parent, style);
+		this.tcBomline = tcBomline;
+		setText("SWT Dialog");
+	}
+
+	/**
+	 * Open the dialog.
+	 * @return the result
+	 */
+	public Object open() {
+		createContents();
+		shell.open();
+		shell.layout();
+		Display display = getParent().getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Create contents of the dialog.
+	 */
+	private void createContents() {
+		shell = new Shell(getParent(), getStyle());
+		shell.setSize(505, 330);
+		shell.setText(getText());
+		shell.setLayout(new GridLayout(1, false));
+		
+		Composite composite = new Composite(shell, SWT.NONE);
+		GridData gd_composite = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_composite.heightHint = 96;
+		gd_composite.widthHint = 492;
+		composite.setLayoutData(gd_composite);
+		
+		Label lblBaseAssembly = new Label(composite, SWT.NONE);
+		lblBaseAssembly.setBounds(10, 10, 78, 15);
+		lblBaseAssembly.setText("Base Assembly");
+		
+		Label lblRevisionId = new Label(composite, SWT.NONE);
+		lblRevisionId.setBounds(10, 56, 67, 15);
+		lblRevisionId.setText("Revision ID");
+		
+		text = new Text(composite, SWT.BORDER);
+		text.setBounds(94, 7, 178, 21);
+		
+		text_1 = new Text(composite, SWT.BORDER);
+		text_1.setBounds(95, 53, 177, 21);
+		
+		Composite composite_1 = new Composite(shell, SWT.NONE);
+		GridData gd_composite_1 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_composite_1.widthHint = 492;
+		gd_composite_1.heightHint = 154;
+		composite_1.setLayoutData(gd_composite_1);
+		
+		Label lblReplaceParts = new Label(composite_1, SWT.NONE);
+		lblReplaceParts.setBounds(0, 38, 75, 15);
+		lblReplaceParts.setText("Replace Parts");
+		
+		Button btnCancel = new Button(composite_1, SWT.NONE);
+		btnCancel.setBounds(10, 119, 75, 25);
+		btnCancel.setText("Cancel");
+		
+		Button btnCreate = new Button(composite_1, SWT.NONE);
+		btnCreate.setBounds(92, 119, 75, 25);
+		btnCreate.setText("Create");
+		
+		table = new Table(composite_1, SWT.BORDER | SWT.FULL_SELECTION);
+		table.setBounds(81, 10, 321, 103);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+		
+		TableColumn tblclmnNewColumn = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn.setWidth(100);
+		tblclmnNewColumn.setText("Parent ID");
+		
+		TableColumn tblclmnNewColumn_1 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_1.setWidth(100);
+		tblclmnNewColumn_1.setText("Child ID");
+		
+		TableColumn tblclmnNewColumn_2 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_2.setWidth(100);
+		tblclmnNewColumn_2.setText("Replace Child ID");
+		
+		TableItem tableItem = new TableItem(table, SWT.NONE);
+		
+		
+		
+		 TCComponentBOMLine param = tcBomline1.getCachedParent();
+		 String bmvalue = null;
+		
+		
+		 try {
+			text.setText(param.getProperty("bl_indented_title"));
+			text_1.setText(param.getProperty("bl_rev_item_revision_id"));
+			tableItem.setText(0, param.getProperty("bl_item_item_id"));
+			bmvalue = tcBomline1.getProperty("bl_item_item_id");
+		} catch (TCException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+	
+	    tableItem.setText(1, bmvalue);
+	   
+		
+		Button button = new Button(composite_1, SWT.NONE);
+		button.setImage(SWTResourceManager.getImage("C:\\Users\\IZCHND045\\Desktop\\images.jpg"));
+		button.setBounds(407, 38, 14, 15);
+		
+		Button btnNewButton = new Button(composite_1, SWT.NONE);
+		btnNewButton.setImage(SWTResourceManager.getImage("C:\\Users\\IZCHND045\\Desktop\\images.png"));
+		btnNewButton.setBounds(408, 85, 19, 7);
+		
+		
+        //MyCode
+		 final TableEditor editor = new TableEditor(table);
+		    editor.horizontalAlignment = SWT.LEFT;
+		    editor.grabHorizontal = true;
+		
+		
+		button.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+	
+				TableItem newItem = new TableItem(table, SWT.NONE);
+				//newItem.setText(0, "1");
+				//newItem.setText(1, "2");
+				//newItem.setText(2, "3");
+				
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		
+		btnNewButton.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				// TableItem[] set = table.getSelection();
+				  System.out.println("coming inside the remove");
+				  table.remove (table.getSelectionIndices ());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		}); 
+		
+		//.........................
+		
+		table.addListener (SWT.MouseDown, event -> {
+			Rectangle clientArea = table.getClientArea ();
+			Point pt = new Point (event.x, event.y);
+			int index = table.getTopIndex ();
+			while (index < table.getItemCount ()) {
+				boolean visible = false;
+				final TableItem item = table.getItem (index);
+				for (int i=0; i<table.getColumnCount (); i++) {
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						final int column = i;
+						final Text text = new Text (table, SWT.NONE);
+						Listener textListener = e -> {
+							switch (e.type) {
+								case SWT.FocusOut:
+									item.setText (column, text.getText ());
+									text.dispose ();
+									break;
+								case SWT.Traverse:
+									switch (e.detail) {
+										case SWT.TRAVERSE_RETURN:
+											item.setText (column, text.getText ());
+											//FALL THROUGH
+										case SWT.TRAVERSE_ESCAPE:
+											text.dispose ();
+											e.doit = false;
+									}
+									break;
+							}
+						};
+						text.addListener (SWT.FocusOut, textListener);
+						text.addListener (SWT.Traverse, textListener);
+						editor.setEditor (text, item, i);
+						text.setText (item.getText (i));
+						
+						
+						text.selectAll ();
+						text.setFocus ();
+						return;
+					}
+					if (!visible && rect.intersects (clientArea)) {
+						visible = true;
+					}
+				}
+				if (!visible) return;
+				index++;
+			}
+		});
+		
+		
+		// Replace item ..................................................................................................
+		btnCreate.addSelectionListener(new SelectionListener() {
+			
+			private TCComponentItem tItem;
+			@Override      
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				String parentVal  = null;
+				String childVal   = null;
+				String replaceVal = null; 
+				
+				   TableItem[] tableItems = table.getItems();
+				   for (int i1 = 0; i1 < tableItems.length; i1++){
+				          
+					   parentVal = tableItems[i1].getText(0);
+					   childVal = tableItems[i1].getText(1);
+					   replaceVal = tableItems[i1].getText(2);
+				   }
+				
+				
+				
+				
+				  TCComponent tcObject = (TCComponent)AIFUtility.getCurrentApplication().getTargetComponent();
+					 
+					 TCSession session = tcObject.getSession();
+					   TCComponentItemType tItemType;
+					   
+					try {
+						tItemType = (TCComponentItemType) session.getTypeComponent("Item");
+						tItem = tItemType.find(replaceVal);
+						
+						System.out.println("found item is :"+tItem.getTypeObject());
+						
+						if(tItem instanceof TCComponentItem){
+							System.out.println("Successfully find the item  .....  = "+tItem);
+						}
+						
+					} catch (TCException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+			
+				 try {
+					TCComponentBOMView bomView = tcBomline1.getBOMView();
+					 tcBomline1.replace(tItem, tItem.getLatestItemRevision(),bomView );
+				} catch (TCException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		btnCancel.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				shell.close();
+				
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+	}
+}
+
+
+
+
+
+
+
+
+
+//...........................................................................
+Traverse BOMLine 
+
+
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class TestTravBomLineStru extends AbstractHandler {
+
+	@Override
+    public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		
+		TCComponentBOMLine bomLineTarget =(TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+		TCSession session = bomLineTarget.getSession();
+	    try {
+			AIFComponentContext[] child = bomLineTarget.getChildren();
+			for(int i=0;i<child.length;i++){
+				TCComponentBOMLine children = (TCComponentBOMLine) child[i].getComponent();
+				System.out.println("Child1  "+child[i]);
+				getChildren2(children);
+			}
+			
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return null;
+	}
+	
+	public void getChildren2(TCComponentBOMLine bomLineTarget ){
+		
+		try {
+			AIFComponentContext[] child2 = bomLineTarget.getChildren();
+			
+			for(int i=0;i<child2.length;i++){
+				TCComponentBOMLine nextChild1=(TCComponentBOMLine)child2[i].getComponent();
+				System.out.println("Child2  "+child2[i]);
+				if(child2.length>0)
+					for(int j=0;j<child2.length;j++){
+						getChildren2(nextChild1);
+					}
+	
+			}
+					
+			
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+}
