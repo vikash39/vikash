@@ -1,0 +1,296 @@
+
+
+-Xms256m -Xmx1024m -Dautologin.user=infodba -Dautologin.pass=infodba
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+	<extension point="org.eclipse.ui.commands">
+		<command
+			name="Sample Command"
+			id="com.tc.rac.sampleCmd">
+		</command>
+		<command
+			name="Sample Command1"
+			id="com.tc.rac.sampleCmd1">
+		</command>
+		
+		<command
+			name="Dialog Box"
+			id="com.tc.rac.dialogbox">
+		</command>
+		
+		<command
+			name="Update Values"
+			id="com.tc.rac.updateValues">
+		</command>
+		
+		<command
+			name="Revise ItemRevision"
+			id="com.tc.rac.revise.itemRevision">
+		</command>
+		
+		<command
+			name="Create Item"
+			id="com.tc.rac.create.item">
+		</command>
+		
+		<command
+			name="Create Folder"
+			id="com.tc.rac.create.folder">
+		</command>
+		
+		<command
+			name="Create Form"
+			id="com.tc.rac.create.form">
+		</command>
+		
+		<command
+			name="Create Item and Form"
+			id="com.tc.rac.create.itemAndForm">
+		</command>
+		
+		<command
+			name="GET BOM Structure All Revision ID"
+			id="com.tc.rac.get.bom.structure.id">
+		</command>
+		
+		<command
+			name="Create ProtoType"
+			id="com.tc.structurem.prototype.id">
+		</command>
+		<command
+			name="Replace"
+			id="com.tc.structurem.replace.id">
+		</command>
+		
+	</extension>
+	
+	
+	<extension point="org.eclipse.ui.handlers">
+		<handler
+			commandId="com.tc.rac.sampleCmd"
+			class="com.tc.form.properties.GetPropertiesHandler">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.sampleCmd1"
+			class="com.tc.get.folder.and.itemname.GetFolderAndItemName">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.dialogbox"
+			class="com.tc.dialogbox.DialogHandler">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.updateValues"
+			class="com.tc.dupdatevalue.UpdateValues">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.revise.itemRevision"
+			class="com.tc.revise.itemRevision.ReviseItemRevision">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.create.item"
+			class="com.tc.create.item.CreateItem">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.create.folder"
+			class="com.tc.create.item.CreateFolder">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.create.form"
+			class="com.tc.create.item.CreateForm">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.create.itemAndForm"
+			class="com.tc.create.itemandform.CreateItem">
+		</handler>
+		
+		<handler
+			commandId="com.tc.rac.get.bom.structure.id"
+			class="com.tc.structure.manager.GetBOMStructureID">
+		</handler>
+		
+		<handler
+			commandId="com.tc.structurem.prototype.id"
+			class="com.tc.structurem.prototype.CreatePrototypeStruct">
+		</handler>
+		
+		<handler
+			commandId="com.tc.structurem.replace.id"
+			class="com.tc.structurem.prototype.CrPrototype">
+		</handler>
+		
+		
+		
+	</extension>
+	
+	
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+			<menu
+				
+				label="Intelizign"
+				id="com.tc.menu.intelizign">
+				
+				<command
+					label="Click Here"
+					commandId="com.tc.rac.sampleCmd"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="ItemRevision"
+					commandId="com.tc.rac.sampleCmd"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="FormRelation"
+					commandId="com.tc.rac.sampleCmd"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="DisplayFolderAndItem"
+					commandId="com.tc.rac.sampleCmd1"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="DialogBox"
+					commandId="com.tc.rac.dialogbox"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="Update"
+					commandId="com.tc.rac.updateValues"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="Revise ItemRevision"
+					commandId="com.tc.rac.revise.itemRevision"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="Create Item"
+					commandId="com.tc.rac.create.item"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="Create Folder"
+					commandId="com.tc.rac.create.folder"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="CreateItemAndForm"
+					commandId="com.tc.rac.create.itemAndForm"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+				<command
+					label="Get BOM ID"
+					commandId="com.tc.rac.get.bom.structure.id"
+					id="com.tc.menu.intelizign.submenu">
+				</command>
+				
+			</menu>
+		</menuContribution>
+		
+		<menuContribution
+			locationURI="menu:com.tc.menu.intelizign?after=additions">
+			<menu
+				label="Submenu"
+				id="com.tc.menu.Submenu">
+				
+				<command
+					label="Create Folder"
+					commandId="com.tc.rac.create.folder"
+					id="com.tc.menu.intelizign.submenu1">
+					
+				</command>
+				
+				<command
+					label="Create Item"
+					commandId="com.tc.rac.create.item"
+					id="com.tc.menu.intelizign.submenu1">
+					
+				</command>
+				
+				<command
+					label="Create Form"
+					commandId="com.tc.rac.create.form"
+					id="com.tc.menu.intelizign.submenu1">
+					
+				</command>
+				
+			</menu>
+		</menuContribution>
+		
+		<menuContribution
+			locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+			<menu
+				label="BOM Menu"
+				id="com.tc.menu.BOM.Menu">
+				
+				<command
+					label="Get All ID"
+					commandId="com.tc.rac.get.bom.structure.id"
+					id="com.tc.bom.menu.in.structure.manager">
+					
+					<visibleWhen>
+						<reference
+							definitionId="com.teamcenter.rac.pse.inMainPerspective">
+						</reference>
+					</visibleWhen>
+
+				</command>	
+			</menu>
+		</menuContribution>
+		
+		
+		<menuContribution
+			locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+			
+				<command
+					commandId="com.tc.structurem.prototype.id"
+					id="com.tc.structurem.prototype">
+					<!--<visibleWhen>
+						<reference
+							definitionId="com.teamcenter.rac.pse.inMainPerspective">
+						</reference>
+					</visibleWhen>-->
+
+				</command>	
+		</menuContribution>
+		
+		<menuContribution
+			locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+			
+				<command
+					commandId="com.tc.structurem.replace.id"
+					id="com.tc.structurem.replace">
+				</command>	
+				
+			
+		</menuContribution>
+		
+		
+	</extension>
+		
+				
+</plugin>
