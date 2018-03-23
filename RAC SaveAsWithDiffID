@@ -1,0 +1,55 @@
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class CreatePrototypeStruct extends AbstractHandler {
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		// TODO Auto-generated method stub
+		TCSession tcSession = (TCSession) AIFUtility.getCurrentApplication().getSession();
+		InterfaceAIFComponent targetComp = AIFUtility.getCurrentApplication().getTargetComponent();
+		
+		
+		try {
+			// SaveAs item
+			TCComponentBOMLine tcBomLine = (TCComponentBOMLine)targetComp;
+			TCComponentItemRevision itemRev = tcBomLine.getItemRevision();
+			//TCComponentType typeid = tcSession.getTypeComponent("Item");
+			
+			
+			TCComponentItem item = itemRev.getItem();
+			String newItemId=item.getTypeComponent().getNewID();
+			//String newItemId = item.getNewID();
+			TCComponentItem saveItem = itemRev.saveAsItem(newItemId, "A");
+			
+			// Save in newStuff folder
+			
+			TCComponentUser user = tcSession.getUser();
+			TCComponentFolder home = user.getHomeFolder();
+			
+			TCComponentFolder newStuffFolder = home.getNewStuffFolder(tcSession);
+			newStuffFolder.add("contents", saveItem);
+			
+			 
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+}
