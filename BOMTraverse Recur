@@ -1,0 +1,78 @@
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCException;
+
+public class BomTraverse extends AbstractHandler{
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+	
+			TCComponentBOMLine bomline = (TCComponentBOMLine) AIFUtility.getCurrentApplication().getTargetComponent();
+			
+			
+		String level = null;
+		try {
+			level = bomline.getProperty("bl_level_starting_0");
+		} catch (TCException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}	
+	     System.out.println("level=="+level);
+				
+			if(level.equals("0"))
+				
+			{
+					
+				try {
+					traverseBOMLine(bomline);
+				} 
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				System.out.println(" NOT LEVEL 0 " );
+			}
+	
+		return null;
+	    }
+	
+		
+		public void traverseBOMLine(TCComponentBOMLine childLine) throws TCException
+		{
+			String	childname 	= "";
+			String 	findnumber 	= "";
+			
+			int		count		= 0;
+		
+			childname=(childLine.getProperty("bl_item_object_name"));
+			System.out.println(" childname == " + childname);
+
+			findnumber=childLine.getProperty("bl_sequence_no");
+			System.out.println(" Find Number == " + findnumber);
+			
+			count = childLine.getChildrenCount();
+			System.out.println (" count = " + count);
+
+			if(count != 0) {
+				AIFComponentContext[] children= childLine.getChildren();
+
+				for(AIFComponentContext child1 : children) {
+					traverseBOMLine((TCComponentBOMLine)child1.getComponent());
+				}
+			}
+		}
+
+}
+
+
+
+
