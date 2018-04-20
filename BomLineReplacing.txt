@@ -1,0 +1,1589 @@
+Class:- 1
+
+package com.tc.structurem.prototype;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.swt.SWT;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.handlers.HandlerUtil;
+
+import com.tc.dialogbox.MyDialogBox;
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class CrPrototype extends AbstractHandler{
+	
+	//String 	childname 	= "";
+	//AIFComponentContext[] children;
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		// TODO Auto-generated method stub
+		TCSession tcSesion = (TCSession)AIFUtility.getCurrentApplication().getSession();
+		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+		
+		InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+		 TCComponentBOMLine tcBomLine=(TCComponentBOMLine)tgrget;
+		/*
+		 
+		try {
+			
+			TCComponentItemRevision itemRev = tcBomLine.getItemRevision();
+			TCComponentItem item = itemRev.getItem();
+			String str = item.getNewID();
+
+			TCComponentItem itemq = itemRev.saveAsItem(str, "NULL");
+			
+			TCComponentUser user = tcSesion.getUser();
+			TCComponentFolder home = user.getHomeFolder();
+		    TCComponentFolder fold = home.getNewStuffFolder(tcSesion);
+		    fold.add("contents", itemq);
+		    
+		    //.........................................................................
+		   
+		   // TCComponentBOMLine parentId = tcBomLine.parent();
+		   // String itemid = parentId.getProperty("bl_item_item_id");
+		    //System.out.println(itemid);
+
+		    //.........................................................................
+		    
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} */
+		 
+		 
+		 
+		 // Traverse BOM Line...............................................................
+		 /*
+		 TCComponentBOMLine bomline = (TCComponentBOMLine) AIFUtility.getCurrentApplication().getTargetComponent();
+			
+		    
+			String level = null;
+			try {
+				level = bomline.getProperty("bl_level_starting_0");
+			} catch (TCException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}	
+		     System.out.println("level=="+level);
+					
+				if(level.equals("0"))
+					
+				{
+						
+					try {
+						traverseBOMLine(bomline);
+					} 
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else
+				{
+					System.out.println(" NOT LEVEL 0 " );
+				}
+		 
+		 */
+		 //The End Traverse Bomline.............................................................
+		 
+		 
+		 
+		 
+		 
+		 
+		 
+		
+		// CreateSPMBOM newDialog = new CreateSPMBOM(window.getShell(),SWT.DIALOG_TRIM,tcBomLine);
+		 
+		 ReplaceProID newDialog = new ReplaceProID(window.getShell(),SWT.DIALOG_TRIM,tcBomLine);
+		 newDialog.open();
+		return null;
+	}
+
+	//private void getNewStuffFolder(TCSession tcSesion) {
+		// TODO Auto-generated method stub
+		
+	//}
+	/*
+	public void traverseBOMLine(TCComponentBOMLine childLine) throws TCException
+	{
+		String	childname 	= "";
+		String 	findnumber 	= "";
+		
+		int count = 0;
+	
+		childname=(childLine.getProperty("bl_item_object_name"));
+		//System.out.println(" childname == " + childname);
+
+		findnumber=childLine.getProperty("bl_sequence_no");
+		//System.out.println(" Find Number == " + findnumber);
+		
+		count = childLine.getChildrenCount();
+		//System.out.println (" count = " + count);
+
+		if(count != 0) {
+			AIFComponentContext[] children= childLine.getChildren();
+
+			for(AIFComponentContext child1 : children) {
+				traverseBOMLine((TCComponentBOMLine)child1.getComponent());
+			}
+		}
+		
+	} */
+	
+}
+
+
+//................................................................................................................................
+
+Class :- 2
+
+
+package com.tc.structurem.prototype;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.widgets.TableItem;
+
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentBOMView;
+import com.teamcenter.rac.kernel.TCComponentBOMViewRevision;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentItemType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+import com.teamcenter.soa.exceptions.NotLoadedException;
+
+public class ReplaceProID extends Dialog{
+
+	protected Object result;
+	protected Shell shell;
+	private Text text;
+	private Text text_1;
+	private Table table;
+	String childname = "";
+	private TCComponentItem chItem = null;
+	private TCComponentItem pItem = null;
+	private TCComponentItem protoTypeItem = null;
+	private TCComponentItemRevision latestRev = null;
+	AIFComponentContext[] children = null;
+	TCComponentBOMLine childLine = null;
+	// HashSet<TCComponentBOMLine> childLines;
+	LinkedList<TCComponentBOMLine> childLines;
+	LinkedList<TCComponentBOMLine> allChildLines;
+
+	TCSession tcSesion = (TCSession) AIFUtility.getCurrentApplication().getSession();
+			
+	InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+			
+	TCComponentBOMLine tcBomline1 = (TCComponentBOMLine) tgrget;
+
+	TCComponentBOMLine tcBomline;
+
+	// AIFComponentContext[] childname ;
+	// AIFComponentContext[] child2 =null;
+
+	/**
+	 * Create the dialog.
+	 * 
+	 * @param parent
+	 * @param style
+	 */
+	public ReplaceProID(Shell parent, int style, TCComponentBOMLine tcBomline) {
+		super(parent, style);
+		this.tcBomline = tcBomline;
+		// this.child = child;
+		// this.childname = childname;
+		setText("SWT Dialog");
+	}
+
+	/**
+	 * Open the dialog.
+	 * 
+	 * @return the result
+	 */
+	public Object open() {
+		createContents();
+		shell.open();
+		shell.layout();
+		Display display = getParent().getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Create contents of the dialog.
+	 */
+	private void createContents() {
+		shell = new Shell(getParent(), getStyle());
+		shell.setSize(505, 330);
+		shell.setText(getText());
+		shell.setLayout(new GridLayout(1, false));
+
+		Composite composite = new Composite(shell, SWT.NONE);
+		GridData gd_composite = new GridData(SWT.LEFT, SWT.CENTER, false,
+				false, 1, 1);
+		gd_composite.heightHint = 96;
+		gd_composite.widthHint = 492;
+		composite.setLayoutData(gd_composite);
+
+		Label lblBaseAssembly = new Label(composite, SWT.NONE);
+		lblBaseAssembly.setBounds(10, 10, 78, 15);
+		lblBaseAssembly.setText("Base Assembly");
+
+		Label lblRevisionId = new Label(composite, SWT.NONE);
+		lblRevisionId.setBounds(10, 56, 67, 15);
+		lblRevisionId.setText("Revision ID");
+
+		text = new Text(composite, SWT.BORDER);
+		text.setBounds(94, 7, 178, 21);
+
+		text_1 = new Text(composite, SWT.BORDER);
+		text_1.setBounds(95, 53, 177, 21);
+
+		Composite composite_1 = new Composite(shell, SWT.NONE);
+		GridData gd_composite_1 = new GridData(SWT.LEFT, SWT.CENTER, false,
+				false, 1, 1);
+		gd_composite_1.widthHint = 492;
+		gd_composite_1.heightHint = 154;
+		composite_1.setLayoutData(gd_composite_1);
+
+		Label lblReplaceParts = new Label(composite_1, SWT.NONE);
+		lblReplaceParts.setBounds(0, 38, 75, 15);
+		lblReplaceParts.setText("Replace Parts");
+
+		Button btnCancel = new Button(composite_1, SWT.NONE);
+		btnCancel.setBounds(10, 119, 75, 25);
+		btnCancel.setText("Cancel");
+
+		Button btnCreate = new Button(composite_1, SWT.NONE);
+		btnCreate.setBounds(92, 119, 75, 25);
+		btnCreate.setText("Create");
+
+		table = new Table(composite_1, SWT.BORDER | SWT.FULL_SELECTION);
+		table.setBounds(81, 10, 321, 103);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+
+		TableColumn tblclmnNewColumn = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn.setWidth(100);
+		tblclmnNewColumn.setText("Parent ID");
+
+		TableColumn tblclmnNewColumn_1 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_1.setWidth(100);
+		tblclmnNewColumn_1.setText("Child ID");
+
+		TableColumn tblclmnNewColumn_2 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_2.setWidth(100);
+		tblclmnNewColumn_2.setText("Replace Child ID");
+
+		TableItem tableItem = new TableItem(table, SWT.NONE);
+
+		// TCComponent tgrget1 = (TCComponent)
+		// AIFUtility.getCurrentApplication().getTargetComponent();
+		// TCComponentBOMLine tcBomline12=(TCComponentBOMLine)tgrget1;
+
+		// TCComponentBOMLine param = tcBomline1.getCachedParent();
+
+		String bmvalue = null;
+		TCComponentBOMLine mrRootNode;
+
+		try {
+
+			mrRootNode = tcBomline1.getMRMMainAssemblyRootNode();
+			text.setText(mrRootNode.getProperty("bl_indented_title"));
+			text_1.setText(mrRootNode.getProperty("bl_rev_item_revision_id"));
+			// tableItem.setText(0, param.getProperty("bl_item_item_id"));
+			// bmvalue = tcBomline1.getProperty("bl_item_item_id");
+
+		} catch (TCException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		// tableItem.setText(1, bmvalue);
+
+		Button button = new Button(composite_1, SWT.NONE);
+		button.setImage(SWTResourceManager
+				.getImage("C:\\Users\\IZCHND045\\Desktop\\images.jpg"));
+		button.setBounds(407, 38, 14, 15);
+
+		Button btnNewButton = new Button(composite_1, SWT.NONE);
+		btnNewButton.setImage(SWTResourceManager
+				.getImage("C:\\Users\\IZCHND045\\Desktop\\images.png"));
+		btnNewButton.setBounds(408, 85, 19, 7);
+
+		// MyCode
+		final TableEditor editor = new TableEditor(table);
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+
+		button.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				TableItem newItem = new TableItem(table, SWT.NONE);
+				// newItem.setText(0, "1");
+				// newItem.setText(1, "2");
+				// newItem.setText(2, "3");
+
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		btnNewButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				// TableItem[] set = table.getSelection();
+				System.out.println("coming inside the remove");
+				table.remove(table.getSelectionIndices());
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		// .........................
+
+		table.addListener(SWT.MouseDown, event -> {
+			Rectangle clientArea = table.getClientArea();
+			Point pt = new Point(event.x, event.y);
+			int index = table.getTopIndex();
+			while (index < table.getItemCount()) {
+				boolean visible = false;
+				final TableItem item = table.getItem(index);
+				for (int i = 0; i < table.getColumnCount(); i++) {
+					Rectangle rect = item.getBounds(i);
+					if (rect.contains(pt)) {
+						final int column = i;
+						final Text text = new Text(table, SWT.NONE);
+						Listener textListener = e -> {
+							switch (e.type) {
+							case SWT.FocusOut:
+								item.setText(column, text.getText());
+								text.dispose();
+								break;
+							case SWT.Traverse:
+								switch (e.detail) {
+								case SWT.TRAVERSE_RETURN:
+									item.setText(column, text.getText());
+									// FALL THROUGH
+								case SWT.TRAVERSE_ESCAPE:
+									text.dispose();
+									e.doit = false;
+								}
+								break;
+							}
+						};
+						text.addListener(SWT.FocusOut, textListener);
+						text.addListener(SWT.Traverse, textListener);
+						editor.setEditor(text, item, i);
+						text.setText(item.getText(i));
+
+						text.selectAll();
+						text.setFocus();
+						return;
+					}
+					if (!visible && rect.intersects(clientArea)) {
+						visible = true;
+					}
+				}
+				if (!visible)
+					return;
+				index++;
+			}
+		});
+
+		// Replace item
+		// ..................................................................................................
+		btnCreate.addSelectionListener(new SelectionListener() {
+
+			private String parentVal;
+			// private TCComponentItem saveItem = null;
+			private String childVal;
+			private String replaceVal;
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				
+
+				TableItem[] tableItems = table.getItems();
+				for (int i1 = 0; i1 < tableItems.length; i1++) {
+
+					parentVal = tableItems[i1].getText(0);
+					childVal = tableItems[i1].getText(1);
+					replaceVal = tableItems[i1].getText(2);
+					
+						
+					
+
+					// System.out.println("Out:" +
+					// parentVal+","+childVal+","+replaceVal) ;
+
+				}
+
+				// Traverse BOM
+
+				TCComponentBOMLine bomline = (TCComponentBOMLine) AIFUtility.getCurrentApplication().getTargetComponent();
+						
+
+				String level = null;
+				try {
+					level = bomline.getProperty("bl_level_starting_0");
+				} catch (TCException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println("level==" + level);
+
+				if (level.equals("0"))
+
+				{
+
+					try {
+
+						childLines = new LinkedList<>();
+						allChildLines = traverseBOMLine(bomline, childLines);
+						// LinkedList<TCComponentBOMLine> allChildLines =
+						// traverseBOMLine(bomline,childLines);
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println(" NOT LEVEL 0 ");
+				}
+
+				/*
+				 * for (TCComponentBOMLine s : childLines) {
+				 * 
+				 * System.out.println("BOMLine  "+s);
+				 * 
+				 * }
+				 */
+
+				for (int i1 = 0; i1 < tableItems.length; i1++) {
+					parentVal = tableItems[i1].getText(0);
+					childVal = tableItems[i1].getText(1);
+					replaceVal = tableItems[i1].getText(2);
+					System.out.println("Out:" + parentVal + "," + childVal+ "," + replaceVal);
+							
+
+					TCComponentBOMLine param = tcBomline1.getCachedParent();
+					// //////////////////////
+
+					// TCComponentBOMLine tcObject =
+					// (TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+					TCSession session = tcBomline1.getSession();
+					TCComponentItemType tItemType;
+					try {
+						tItemType = (TCComponentItemType) session.getTypeComponent("Item");
+								
+						chItem = tItemType.find(childVal);
+						pItem = tItemType.find(parentVal);
+						protoTypeItem = tItemType.find(replaceVal);
+
+						// TCComponentItem childObj1 = (TCComponentItem)
+						// protoTypeItem.getIntProperty(arg0)
+
+						
+						 if( protoTypeItem !=null ){
+							//for (int num = 0; num < allChildLines.size(); num++) { 
+								//String childObj = allChildLines.get(num).getPropertyDisplayableValue("bl_item_item_id");
+								
+								//TCComponentItemRevision itemRev = allChildLines.get(num).getItemRevision();
+							//}
+							System.out.println("Item is exists ");
+							
+							//tNewItem.save();
+						}else{
+							TCComponentItem newItemId = tItemType.find(childVal);
+							String itemName = newItemId.getProperty("object_name");
+							 TCComponentItemRevision latestRevId = newItemId.getLatestItemRevision();
+							String revId = latestRevId.getProperty("current_revision_id");
+							
+							TCSession tSession=(TCSession)AIFUtility.getCurrentApplication().getSession();
+							TCComponentItemType tcComItemType=(TCComponentItemType)tSession.getTypeComponent("Item");
+							TCComponentItem tNewItem = (TCComponentItem)tcComItemType.create(replaceVal,revId,"Item",itemName,null,null);
+						}
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						 if(chItem != null && pItem !=null && protoTypeItem !=null ){
+						// if(chItem != null && pItem !=null ){
+							 String childObj = null;
+							 
+							 
+
+								TCComponentItem newItemId = tItemType.find(replaceVal);
+								//TCComponentItemRevision  latestRev = tItemType.find(replaceVal).getLatestItemRevision();
+								TCComponentItemRevision  latestRev = newItemId.getLatestItemRevision();
+								  
+								// TCComponentBOMView bomView = tcBomline1.getBOMView();
+							  // Replacing ................................ 
+							 for (int num = 0; num < allChildLines.size(); num++) 
+							 {
+								 
+								 childObj = allChildLines.get(num).getPropertyDisplayableValue("bl_item_item_id");
+							  
+								 TCComponentBOMView bomView = null;
+								 if (childObj.equals(childVal)){
+									
+									 //bomView = (TCComponentItemType) session.getTypeComponent("BOMView");
+									 bomView = allChildLines.get(num).getBOMView();
+									 //bomView= tcBomline1.getBOMView();
+									
+									 
+									 
+									// allChildLines.get(num).replace(newItemId, latestRev,bomView);
+									 
+									 new ReplaceBomline(allChildLines.get(num), newItemId);
+									 break;
+								 }
+							 }
+							 if (childObj.equals(childVal)){
+								 System.out.println("Replace Successfully");
+							 }
+							  
+							 
+							
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+						 
+							/* 
+							 
+						
+						System.out.println("Inside the if condation  protoTypeItem.equals(replaceVal)");
+
+						System.out.println("count" + allChildLines.size());
+						for (int num = 0; num < allChildLines.size(); num++) {
+							System.out.println(allChildLines.get(num));
+
+
+							TCComponentBOMLine line = allChildLines.get(num);
+							
+							String childObj = allChildLines.get(num).getPropertyDisplayableValue("bl_item_item_id");
+									
+											
+
+					
+
+							if (childObj.equals(childVal)) {
+								TCComponentBOMLine parent = allChildLines.get(num).parent();
+										
+
+								System.out.println("inside  if(childObj.equals(child))"+ parent.getProperty("bl_item_item_id"));
+										
+								String parentId = parent.getProperty("bl_item_item_id");
+										
+
+
+								if (childObj.equals(childVal)&& parentId.equals(parentVal)) {
+										
+
+									
+									System.out.println("Inside the if condation  childObj.equals(chItem) && parentObj.equals(pItem)");
+									if (childObj.equals(childVal)) {
+
+										
+										TCComponentItemRevision itemRev = allChildLines.get(num).getItemRevision();
+												
+										
+										//String itemRevId = allChildLines.get(num).getPropertyDisplayableValue("bl_rev_item_revision_id");
+												
+												
+										
+										TCComponentItem saveItem = itemRev.saveAsItem(replaceVal,itemRevId);
+												
+														
+										// Save in newStuff folder
+
+										TCComponentUser user = tcSesion.getUser();
+												
+										TCComponentFolder home = user.getHomeFolder();
+												
+
+										TCComponentFolder newStuffFolder = home.getNewStuffFolder(tcSesion);
+										newStuffFolder.add("contents", saveItem);
+												
+
+
+									}
+
+									
+									System.out.println("BOMLine replaceVal  "
+											+ replaceVal);
+								} else {
+									// System.out.println("BOMLine  "+s);
+									System.out
+											.println("Not match child and parent item");
+								}
+							}  
+
+							
+						} */
+
+					}
+
+					} catch (TCException | NotLoadedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+
+				}
+
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		btnCancel.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				shell.close();
+
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+	}
+
+	public LinkedList<TCComponentBOMLine> traverseBOMLine(
+			TCComponentBOMLine childLine,
+			LinkedList<TCComponentBOMLine> childLines2) throws TCException,
+			NotLoadedException {
+		// String childname = "";
+		String findnumber = "";
+
+		int count = 0;
+
+		childname = (childLine.getProperty("bl_item_object_name"));
+		this.childLines.add(childLine);
+		// System.out.println(" childname == " + childname);
+
+		findnumber = childLine.getProperty("bl_sequence_no");
+		// System.out.println(" Find Number == " + findnumber);
+
+		count = childLine.getChildrenCount();
+		// System.out.println (" count = " + count);
+
+		if (count != 0) {
+
+			children = childLine.getChildren();
+			
+			for (AIFComponentContext child1 : children) {
+				
+				traverseBOMLine((TCComponentBOMLine) child1.getComponent(),childLines);
+						
+
+			}
+
+		}
+		return childLines;
+
+	}
+
+}
+
+
+//......................................................................................................................
+
+Class :- 3 Replace bomline
+
+
+package com.tc.structurem.prototype;
+
+import com.teamcenter.rac.kernel.ServiceData;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.services.internal.rac.structuremanagement.RestructureService;
+import com.teamcenter.services.internal.rac.structuremanagement._2014_12.Restructure.ReplaceItemsParameter;
+
+public class ReplaceBomline 
+{
+	public ReplaceBomline(TCComponentBOMLine oldLine,TCComponentBOMLine newLine) throws Exception
+	{
+		this(oldLine, newLine.getItem());
+	}
+	public ReplaceBomline(TCComponentBOMLine oldLine,TCComponentItem newItem)
+	{
+		init(oldLine,newItem);
+	}
+	private void init(TCComponentBOMLine oldLine, TCComponentItem newItem) 
+	{
+		ReplaceItemsParameter[] replaceParameters = getReplaceParameters(oldLine,newItem);
+		RestructureService restructureService = RestructureService.getService(oldLine.getSession());
+		ServiceData replaceItems = restructureService.replaceItems(replaceParameters);
+		System.out.println(replaceItems.sizeOfUpdatedObjects());
+	}
+	private ReplaceItemsParameter[] getReplaceParameters(TCComponentBOMLine oldLine,TCComponentItem newItem) 
+	{
+		ReplaceItemsParameter[] replaceItemsParameter = new ReplaceItemsParameter[1];
+		try 
+		{
+			replaceItemsParameter[0]	= new ReplaceItemsParameter();
+			replaceItemsParameter[0].item = newItem;
+			replaceItemsParameter[0].itemRevision = newItem.getLatestItemRevision();
+			replaceItemsParameter[0].bomLine = oldLine;
+			replaceItemsParameter[0].replaceOption = 1;
+		}
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
+		return replaceItemsParameter;
+	}
+}
+
+
+
+
+
+
+//................................................................................................................................
+
+Class :- 2 Orignal one
+
+
+
+
+
+
+
+
+
+
+package com.tc.structurem.prototype;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.widgets.TableItem;
+
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentBOMView;
+import com.teamcenter.rac.kernel.TCComponentBOMViewRevision;
+import com.teamcenter.rac.kernel.TCComponentBOMWindow;
+import com.teamcenter.rac.kernel.TCComponentBOMWindowType;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponentItemType;
+import com.teamcenter.rac.kernel.TCComponentRevisionRule;
+import com.teamcenter.rac.kernel.TCComponentRevisionRuleType;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+import com.teamcenter.soa.exceptions.NotLoadedException;
+
+public class ReplaceProID extends Dialog{
+
+	protected Object result;
+	protected Shell shell;
+	private Text text;
+	private Text text_1;
+	private Table table;
+	String childname = "";
+	private TCComponentItem chItem = null;
+	private TCComponentItem pItem = null;
+	private TCComponentItem protoTypeItem = null;
+	private TCComponentItemRevision latestRev = null;
+	AIFComponentContext[] children = null;
+	TCComponentBOMLine childLine = null;
+	// HashSet<TCComponentBOMLine> childLines;
+	LinkedList<TCComponentBOMLine> childLines;
+	LinkedList<TCComponentBOMLine> allChildLines;
+
+	TCSession tcSesion = (TCSession) AIFUtility.getCurrentApplication().getSession();
+			
+	InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+			
+	TCComponentBOMLine tcBomline1 = (TCComponentBOMLine) tgrget;
+
+	TCComponentBOMLine tcBomline;
+
+	// AIFComponentContext[] childname ;
+	// AIFComponentContext[] child2 =null;
+
+	/**
+	 * Create the dialog.
+	 * 
+	 * @param parent
+	 * @param style
+	 */
+	public ReplaceProID(Shell parent, int style, TCComponentBOMLine tcBomline) {
+		super(parent, style);
+		this.tcBomline = tcBomline;
+		// this.child = child;
+		// this.childname = childname;
+		setText("SWT Dialog");
+	}
+
+	/**
+	 * Open the dialog.
+	 * 
+	 * @return the result
+	 */
+	public Object open() {
+		createContents();
+		shell.open();
+		shell.layout();
+		Display display = getParent().getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Create contents of the dialog.
+	 */
+	private void createContents() {
+		shell = new Shell(getParent(), getStyle());
+		shell.setSize(505, 330);
+		shell.setText(getText());
+		shell.setLayout(new GridLayout(1, false));
+
+		Composite composite = new Composite(shell, SWT.NONE);
+		GridData gd_composite = new GridData(SWT.LEFT, SWT.CENTER, false,
+				false, 1, 1);
+		gd_composite.heightHint = 96;
+		gd_composite.widthHint = 492;
+		composite.setLayoutData(gd_composite);
+
+		Label lblBaseAssembly = new Label(composite, SWT.NONE);
+		lblBaseAssembly.setBounds(10, 10, 78, 15);
+		lblBaseAssembly.setText("Base Assembly");
+
+		Label lblRevisionId = new Label(composite, SWT.NONE);
+		lblRevisionId.setBounds(10, 56, 67, 15);
+		lblRevisionId.setText("Revision ID");
+
+		text = new Text(composite, SWT.BORDER);
+		text.setBounds(94, 7, 178, 21);
+
+		text_1 = new Text(composite, SWT.BORDER);
+		text_1.setBounds(95, 53, 177, 21);
+
+		Composite composite_1 = new Composite(shell, SWT.NONE);
+		GridData gd_composite_1 = new GridData(SWT.LEFT, SWT.CENTER, false,
+				false, 1, 1);
+		gd_composite_1.widthHint = 492;
+		gd_composite_1.heightHint = 154;
+		composite_1.setLayoutData(gd_composite_1);
+
+		Label lblReplaceParts = new Label(composite_1, SWT.NONE);
+		lblReplaceParts.setBounds(0, 38, 75, 15);
+		lblReplaceParts.setText("Replace Parts");
+
+		Button btnCancel = new Button(composite_1, SWT.NONE);
+		btnCancel.setBounds(10, 119, 75, 25);
+		btnCancel.setText("Cancel");
+
+		Button btnCreate = new Button(composite_1, SWT.NONE);
+		btnCreate.setBounds(92, 119, 75, 25);
+		btnCreate.setText("Create");
+
+		table = new Table(composite_1, SWT.BORDER | SWT.FULL_SELECTION);
+		table.setBounds(81, 10, 321, 103);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+
+		TableColumn tblclmnNewColumn = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn.setWidth(100);
+		tblclmnNewColumn.setText("Parent ID");
+
+		TableColumn tblclmnNewColumn_1 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_1.setWidth(100);
+		tblclmnNewColumn_1.setText("Child ID");
+
+		TableColumn tblclmnNewColumn_2 = new TableColumn(table, SWT.NONE);
+		tblclmnNewColumn_2.setWidth(100);
+		tblclmnNewColumn_2.setText("Replace Child ID");
+
+		TableItem tableItem = new TableItem(table, SWT.NONE);
+
+		// TCComponent tgrget1 = (TCComponent)
+		// AIFUtility.getCurrentApplication().getTargetComponent();
+		// TCComponentBOMLine tcBomline12=(TCComponentBOMLine)tgrget1;
+
+		// TCComponentBOMLine param = tcBomline1.getCachedParent();
+
+		String bmvalue = null;
+		TCComponentBOMLine mrRootNode;
+
+		try {
+
+			mrRootNode = tcBomline1.getMRMMainAssemblyRootNode();
+			text.setText(mrRootNode.getProperty("bl_indented_title"));
+			text_1.setText(mrRootNode.getProperty("bl_rev_item_revision_id"));
+			// tableItem.setText(0, param.getProperty("bl_item_item_id"));
+			// bmvalue = tcBomline1.getProperty("bl_item_item_id");
+
+		} catch (TCException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		// tableItem.setText(1, bmvalue);
+
+		Button button = new Button(composite_1, SWT.NONE);
+		button.setImage(SWTResourceManager
+				.getImage("C:\\Users\\IZCHND045\\Desktop\\images.jpg"));
+		button.setBounds(407, 38, 14, 15);
+
+		Button btnNewButton = new Button(composite_1, SWT.NONE);
+		btnNewButton.setImage(SWTResourceManager
+				.getImage("C:\\Users\\IZCHND045\\Desktop\\images.png"));
+		btnNewButton.setBounds(408, 85, 19, 7);
+
+		// MyCode
+		final TableEditor editor = new TableEditor(table);
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+
+		button.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				TableItem newItem = new TableItem(table, SWT.NONE);
+				// newItem.setText(0, "1");
+				// newItem.setText(1, "2");
+				// newItem.setText(2, "3");
+
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		btnNewButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				// TableItem[] set = table.getSelection();
+				System.out.println("coming inside the remove");
+				table.remove(table.getSelectionIndices());
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		// .........................
+
+		table.addListener(SWT.MouseDown, event -> {
+			Rectangle clientArea = table.getClientArea();
+			Point pt = new Point(event.x, event.y);
+			int index = table.getTopIndex();
+			while (index < table.getItemCount()) {
+				boolean visible = false;
+				final TableItem item = table.getItem(index);
+				for (int i = 0; i < table.getColumnCount(); i++) {
+					Rectangle rect = item.getBounds(i);
+					if (rect.contains(pt)) {
+						final int column = i;
+						final Text text = new Text(table, SWT.NONE);
+						Listener textListener = e -> {
+							switch (e.type) {
+							case SWT.FocusOut:
+								item.setText(column, text.getText());
+								text.dispose();
+								break;
+							case SWT.Traverse:
+								switch (e.detail) {
+								case SWT.TRAVERSE_RETURN:
+									item.setText(column, text.getText());
+									// FALL THROUGH
+								case SWT.TRAVERSE_ESCAPE:
+									text.dispose();
+									e.doit = false;
+								}
+								break;
+							}
+						};
+						text.addListener(SWT.FocusOut, textListener);
+						text.addListener(SWT.Traverse, textListener);
+						editor.setEditor(text, item, i);
+						text.setText(item.getText(i));
+
+						text.selectAll();
+						text.setFocus();
+						return;
+					}
+					if (!visible && rect.intersects(clientArea)) {
+						visible = true;
+					}
+				}
+				if (!visible)
+					return;
+				index++;
+			}
+		});
+
+		// Replace item
+		// ..................................................................................................
+		btnCreate.addSelectionListener(new SelectionListener() {
+
+			private String parentVal;
+			// private TCComponentItem saveItem = null;
+			private String childVal;
+			private String replaceVal;
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				
+
+				TableItem[] tableItems = table.getItems();
+				for (int i1 = 0; i1 < tableItems.length; i1++) {
+
+					parentVal = tableItems[i1].getText(0);
+					childVal = tableItems[i1].getText(1);
+					replaceVal = tableItems[i1].getText(2);
+					
+						
+					
+
+					// System.out.println("Out:" +
+					// parentVal+","+childVal+","+replaceVal) ;
+
+				}
+
+				// Traverse BOM
+
+				TCComponentBOMLine bomline = (TCComponentBOMLine) AIFUtility.getCurrentApplication().getTargetComponent();
+						
+
+				String level = null;
+				try {
+					level = bomline.getProperty("bl_level_starting_0");
+				} catch (TCException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println("level==" + level);
+
+				if (level.equals("0"))
+
+				{
+
+					try {
+
+						childLines = new LinkedList<>();
+						allChildLines = traverseBOMLine(bomline, childLines);
+						// LinkedList<TCComponentBOMLine> allChildLines =
+						// traverseBOMLine(bomline,childLines);
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println(" NOT LEVEL 0 ");
+				}
+
+				/*
+				 * for (TCComponentBOMLine s : childLines) {
+				 * 
+				 * System.out.println("BOMLine  "+s);
+				 * 
+				 * }
+				 */
+
+				for (int i1 = 0; i1 < tableItems.length; i1++) {
+					parentVal = tableItems[i1].getText(0);
+					childVal = tableItems[i1].getText(1);
+					replaceVal = tableItems[i1].getText(2);
+					System.out.println("Out:" + parentVal + "," + childVal+ "," + replaceVal);
+							
+
+					TCComponentBOMLine param = tcBomline1.getCachedParent();
+					// //////////////////////
+
+					// TCComponentBOMLine tcObject =
+					// (TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+					TCSession session = tcBomline1.getSession();
+					TCComponentItemType tItemType;
+					try {
+						tItemType = (TCComponentItemType) session.getTypeComponent("Item");
+								
+						chItem = tItemType.find(childVal);
+						pItem = tItemType.find(parentVal);
+						protoTypeItem = tItemType.find(replaceVal);
+
+						// TCComponentItem childObj1 = (TCComponentItem)
+						// protoTypeItem.getIntProperty(arg0)
+
+						
+						 if( protoTypeItem !=null ){
+							
+							System.out.println("Item is exists ");
+							
+							
+						}else{
+							for (int j = 0; j < tableItems.length; j++) {
+								String replaceVal1 = tableItems[j].getText(2);
+								if(protoTypeItem==null){
+									TCComponentItem newItemId = tItemType.find(childVal);
+									String itemName = newItemId.getProperty("object_name");
+									 TCComponentItemRevision latestRevId = newItemId.getLatestItemRevision();
+									String revId = latestRevId.getProperty("current_revision_id");
+									
+									TCSession tSession=(TCSession)AIFUtility.getCurrentApplication().getSession();
+									TCComponentItemType tcComItemType=(TCComponentItemType)tSession.getTypeComponent("Item");
+									TCComponentItem tNewItem = (TCComponentItem)tcComItemType.create(replaceVal1,revId,"Item",itemName,null,null);
+								
+									
+								}
+								
+							}
+						}
+					
+						
+						 if(chItem != null && pItem !=null && protoTypeItem !=null ){
+						// if(chItem != null && pItem !=null ){
+							 String childObj = null;
+							 int tableLength = tableItems.length;
+							 TCComponentBOMLine parentItem = null;
+							 for (int k = 0; k < tableItems.length; k++) {
+								 while(tableLength>0){
+									 TCComponentItem newItemId = tItemType.find(replaceVal);
+									
+									 // Replacing ................................ 
+									 for (int num = 0; num < allChildLines.size(); num++) 
+									 {
+										 
+										 childObj = allChildLines.get(num).getPropertyDisplayableValue("bl_item_item_id");
+									  
+										 if (childObj.equals(childVal)){
+											
+											  parentItem = allChildLines.get(num).parent();
+											 
+											 new ReplaceBomline(allChildLines.get(num), newItemId);
+											 System.out.println("Replace by new item & old item" + replaceVal  +" "+ childVal);
+											 
+											 break;
+										 }
+									 }
+									 if (childObj.equals(childVal)){
+										 System.out.println("Replace Successfully");
+										 
+									 }
+									
+									 tableLength--;
+									 
+								 }
+							 }
+							
+							 if (childObj.equals(childVal)){
+								 
+								//............ Change Parent ID .............................
+								// for (int num = 0; num < allChildLines.size(); num++) 
+								 //{
+									// TCComponentBOMLine parentItem = allChildLines.get(num).parent();
+									 
+									// InterfaceAIFComponent tgrget = AIFUtility.getCurrentApplication().getTargetComponent();
+									// TCComponentBOMLine top_line=(TCComponentBOMLine) tgrget;
+									 // TCComponentBOMLine arg01 =top_line ;
+									 if (childObj.equals(childVal)){
+										  ArrayList<TCComponentBOMLine> ar01 = new ArrayList<TCComponentBOMLine>();
+										  try {
+											for(TCComponentBOMLine arg2 = parentItem; arg2 != null; arg2 = arg2.parent())
+											  {
+											  ar01.add(arg2);
+											  
+											  }
+											//for(TCComponentBOMLine s:ar01){
+											
+											 for(int num1 = 0; num1 < ar01.size()-1; num1++){
+												 
+												System.out.println("Print all parent bomline "+ ar01.get(num1));
+												
+											
+												String itemName = ar01.get(num1).getProperty("object_name");
+												TCComponentItemRevision latestRevId = ar01.get(num1).getItemRevision();
+												String revId = latestRevId.getProperty("current_revision_id");
+												
+												
+
+												//TCComponentItemRevision itemRev = s.getItemRevision();
+											    TCComponentItem item = latestRevId.getItem();		
+												String parentNewItemId=item.getTypeComponent().getNewID();
+												
+												TCComponentItem saveAsItem = latestRevId.saveAsItem(parentNewItemId, revId);
+												System.out.println(saveAsItem);
+												
+										        
+												TCComponentItemRevision itemRev = saveAsItem.getLatestItemRevision();
+												
+												//}
+												// Save in newStuff folder
+												TCSession tSession=(TCSession)AIFUtility.getCurrentApplication().getSession();
+												TCComponentUser user = tSession.getUser();	
+												TCComponentFolder home = user.getHomeFolder();			
+												TCComponentFolder newStuffFolder = home.getNewStuffFolder(tSession);
+												newStuffFolder.add("contents", saveAsItem);
+												
+												
+
+												TCComponentBOMWindowType windowType = (TCComponentBOMWindowType) tSession.getTypeComponent("BOMWindow");
+												TCComponentRevisionRuleType ruletype = (TCComponentRevisionRuleType) tSession.getTypeComponent("RevisionRule");
+												TCComponentRevisionRule rule =ruletype.getDefaultRule();
+												TCComponentBOMWindow window = windowType.create(rule);
+												TCComponentBOMLine line = window.setWindowTopLine(null, itemRev, null, null);
+												
+												
+												
+												System.out.println(line);
+												
+												//ar01.get(num1).ch
+												//for (int num = 0; num < allChildLines.size(); num++) {
+												
+												
+												/*ar01.get(num1).parent().changeToReplace(ar01.get(num1), line);
+												ar01.get(num1).parent().save();
+												window.save();*/
+												ar01.get(num1).parent().remove("", ar01.get(num1));
+												ar01.get(num1).parent().add("", line);
+												ar01.get(num1).parent().save();
+												ar01.get(num1).parent().refresh();
+												window.save();
+												/*Hashtable<TCComponentBOMLine,TCComponentBOMLine> hm=new Hashtable<TCComponentBOMLine,TCComponentBOMLine>();  
+												hm.put(ar01.get(num1), line);
+												 for(TCComponentBOMLine n : hm.keySet()) {
+													 System.out.println("Key:\t" + n + "\nValue:\t" + hm.get(n) + "\n");
+													 n.changeToReplace(arg0, line);
+												 }*/
+												/*
+												InterfaceAIFComponent target = AIFUtility.getCurrentApplication().getTargetComponent();
+												
+												TCComponentBOMLine topBomLine = (TCComponentBOMLine)target;
+												
+												
+												TCComponentItemRevision itemRev = saveAsItem.getLatestItemRevision();
+												
+												
+												// ArrayList<TCComponentBOMLine> addParent = new ArrayList<TCComponentBOMLine>();
+												
+												if(ar01.get(num1).isRoot()){
+													break;
+													
+												}else{
+													
+													
+													for(TCComponentBOMLine arg2 = parentItem; arg2 != null; arg2 = arg2.parent())
+													  {
+													  ar01.add(arg2);
+													  
+													  }
+													//ar01.get(num1).changeToReplace(ar01.get(num1), arg1);
+												}
+													*/
+												
+												
+									 
+											}
+											
+											
+										} catch (TCException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+										  
+									 }
+									
+									 
+									 //...........................................................
+								 
+							 }
+							 
+							 
+							
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+							 
+						 
+							/* 
+							 
+						
+						System.out.println("Inside the if condation  protoTypeItem.equals(replaceVal)");
+
+						System.out.println("count" + allChildLines.size());
+						for (int num = 0; num < allChildLines.size(); num++) {
+							System.out.println(allChildLines.get(num));
+
+
+							TCComponentBOMLine line = allChildLines.get(num);
+							
+							String childObj = allChildLines.get(num).getPropertyDisplayableValue("bl_item_item_id");
+									
+											
+
+					
+
+							if (childObj.equals(childVal)) {
+								TCComponentBOMLine parent = allChildLines.get(num).parent();
+										
+
+								System.out.println("inside  if(childObj.equals(child))"+ parent.getProperty("bl_item_item_id"));
+										
+								String parentId = parent.getProperty("bl_item_item_id");
+										
+
+
+								if (childObj.equals(childVal)&& parentId.equals(parentVal)) {
+										
+
+									
+									System.out.println("Inside the if condation  childObj.equals(chItem) && parentObj.equals(pItem)");
+									if (childObj.equals(childVal)) {
+
+										
+										TCComponentItemRevision itemRev = allChildLines.get(num).getItemRevision();
+												
+										
+										//String itemRevId = allChildLines.get(num).getPropertyDisplayableValue("bl_rev_item_revision_id");
+												
+												
+										
+										TCComponentItem saveItem = itemRev.saveAsItem(replaceVal,itemRevId);
+												
+														
+										// Save in newStuff folder
+
+										TCComponentUser user = tcSesion.getUser();
+												
+										TCComponentFolder home = user.getHomeFolder();
+												
+
+										TCComponentFolder newStuffFolder = home.getNewStuffFolder(tcSesion);
+										newStuffFolder.add("contents", saveItem);
+												
+
+
+									}
+
+									
+									System.out.println("BOMLine replaceVal  "
+											+ replaceVal);
+								} else {
+									// System.out.println("BOMLine  "+s);
+									System.out
+											.println("Not match child and parent item");
+								}
+							}  
+
+							
+						} */
+							 
+							
+
+					}
+
+					} catch (TCException | NotLoadedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+
+				}
+
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		btnCancel.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				shell.close();
+
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+	}
+
+	public LinkedList<TCComponentBOMLine> traverseBOMLine(
+			TCComponentBOMLine childLine,
+			LinkedList<TCComponentBOMLine> childLines2) throws TCException,
+			NotLoadedException {
+		// String childname = "";
+		String findnumber = "";
+
+		int count = 0;
+
+		childname = (childLine.getProperty("bl_item_object_name"));
+		this.childLines.add(childLine);
+		// System.out.println(" childname == " + childname);
+
+		findnumber = childLine.getProperty("bl_sequence_no");
+		// System.out.println(" Find Number == " + findnumber);
+
+		count = childLine.getChildrenCount();
+		// System.out.println (" count = " + count);
+
+		if (count != 0) {
+
+			children = childLine.getChildren();
+			
+			for (AIFComponentContext child1 : children) {
+				
+				traverseBOMLine((TCComponentBOMLine) child1.getComponent(),childLines);
+						
+
+			}
+
+		}
+		return childLines;
+
+	}
+
+}
