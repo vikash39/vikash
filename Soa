@@ -1,0 +1,84 @@
+package com.tc.soa;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentFolder;
+import com.teamcenter.rac.kernel.TCComponentUser;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+import com.teamcenter.services.rac.core.DataManagementService;
+import com.teamcenter.services.rac.core._2006_03.DataManagement;
+import com.teamcenter.services.rac.core._2006_03.DataManagement.CreateItemsOutput;
+import com.teamcenter.services.rac.core._2006_03.DataManagement.CreateItemsResponse;
+import com.teamcenter.services.rac.core._2006_03.DataManagement.ItemProperties;
+import com.teamcenter.soa.client.model.ModelObject;
+import com.teamcenter.soa.exceptions.NotLoadedException;
+
+public class SoaExistingServices extends AbstractHandler {
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		// TODO Auto-generated method stub
+		
+		
+		//AppXSession appxSession = new AppXSession(sHost);
+		TCSession tcSession = (TCSession) AIFUtility.getCurrentApplication().getSession();
+		TCComponentUser user = tcSession.getUser();
+	
+		TCComponentFolder home1 = null;
+		try {
+			home1 = user.getHomeFolder();
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//TCComponent login = tcSession.login();
+		//User uLoginUser = appxSession.login();
+
+		DataManagementService dmServices = DataManagementService.getService(tcSession);
+	//	ModelObject hf=uLoginUser.get_home_folder();
+
+		ItemProperties prop[]= new ItemProperties[2];
+		ItemProperties prop1=new ItemProperties();
+		ItemProperties prop2=new ItemProperties();
+
+		prop1.clientId="TC_user";
+		prop1.itemId="00003809";
+		prop1.name="Vikash";
+		prop1.type="Item";
+		prop1.revId="A";
+		
+		
+		prop2.clientId="TC_user";
+		prop2.itemId="00003863";
+		prop2.name="Vika";
+		prop2.type="Item";
+		prop2.revId="A";
+
+
+		String relation="cotents";
+		prop[0]=prop1;
+		prop[1]=prop2;
+		
+		//CreateItemsResponse response=dmServices.createItems(prop,hf,"cotents");
+		 
+		CreateItemsResponse  response=   dmServices.createItems(prop, home1, "contents");	
+
+		CreateItemsOutput[] out=response.output;
+		for (int i = 0; i < out.length; i++) {
+		ModelObject item=out[i].item;
+		System.out.println("Item Created "+item.toString());
+		ModelObject itemrevision=out[i].itemRev;
+		}
+
+		
+		
+		
+		return null;
+	}
+
+}
