@@ -1,0 +1,241 @@
+DLL File (Revise item revision when any release status is there , otherwise give error)
+
+Class name :- A2ExtensionTest.h
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the declaration for the Extension A2ExtensionTest
+ *
+ */
+ 
+/*#ifndef A2EXTENSIONTEST_HXX
+#define A2EXTENSIONTEST_HXX
+#include <tccore/method.h>
+//#include <A2MyExtensionLib/liba2myextensionlib_exports.h>
+#include "A2ExtensionTest.hxx"
+#ifdef __cplusplus
+         extern "C"{
+#endif
+                 
+extern A2MYEXTENSIONLIB_API int A2ExtensionTest(METHOD_message_t* msg, va_list args);
+                 
+#ifdef __cplusplus
+                   }
+#endif
+                
+#include <A2MyExtensionLib/liba2myextensionlib_undef.h>
+                
+#endif  // A2EXTENSIONTEST_HXX*/
+
+#ifndef A2EXTENSIONTEST_H
+#define A2EXTENSIONTEST_H
+#include <user_exits/user_exits.h>
+
+
+//#include <common/tdwilliamson_common.h>
+// all functions should be without C++ mangling
+
+#include <libtd8extensions_exports.h>
+extern "C" A2MYEXTENSIONLIB_API int A2ExtensionTest(METHOD_message_t* m, va_list args);
+#include <liba2myextensionlib_undef.h>
+
+#endif
+
+
+
+///...................................................................................................................
+
+
+Class Name :- liba2myextensionlib_undef.h
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the declaration for the Extension A2ExtensionTest
+ *
+ */
+ 
+/*#ifndef A2EXTENSIONTEST_HXX
+#define A2EXTENSIONTEST_HXX
+#include <tccore/method.h>
+//#include <A2MyExtensionLib/liba2myextensionlib_exports.h>
+#include "A2ExtensionTest.hxx"
+#ifdef __cplusplus
+         extern "C"{
+#endif
+                 
+extern A2MYEXTENSIONLIB_API int A2ExtensionTest(METHOD_message_t* msg, va_list args);
+                 
+#ifdef __cplusplus
+                   }
+#endif
+                
+#include <A2MyExtensionLib/liba2myextensionlib_undef.h>
+                
+#endif  // A2EXTENSIONTEST_HXX*/
+
+#ifndef A2EXTENSIONTEST_H
+#define A2EXTENSIONTEST_H
+#include <user_exits/user_exits.h>
+
+
+//#include <common/tdwilliamson_common.h>
+// all functions should be without C++ mangling
+
+#include <libtd8extensions_exports.h>
+extern "C" A2MYEXTENSIONLIB_API int A2ExtensionTest(METHOD_message_t* m, va_list args);
+#include <liba2myextensionlib_undef.h>
+
+#endif
+
+
+//.....................................................................................................................
+
+Class Name :- libtd8extensions_exports.h
+
+
+
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/** 
+    @file 
+
+    This file contains the declaration for the Dispatch Library  A2MyExtensionLib
+
+*/
+
+#include <common/library_indicators.h>
+
+#ifdef EXPORTLIBRARY
+#define EXPORTLIBRARY something else
+#error ExportLibrary was already defined
+#endif
+
+#define EXPORTLIBRARY            libA2MyExtensionLib
+
+#if !defined(LIBA2MYEXTENSIONLIB) && !defined(IPLIB)
+#   error IPLIB or LIBA2MYEXTENSIONLIB is not defined
+#endif
+
+/* Handwritten code should use A2MYEXTENSIONLIB_API, not A2MYEXTENSIONLIBEXPORT */
+
+#define A2MYEXTENSIONLIB_API A2MYEXTENSIONLIBEXPORT
+
+#if IPLIB==libA2MyExtensionLib || defined(LIBA2MYEXTENSIONLIB)
+#   if defined(__lint)
+#       define A2MYEXTENSIONLIBEXPORT       __export(A2MyExtensionLib)
+#       define A2MYEXTENSIONLIBGLOBAL       extern __global(A2MyExtensionLib)
+#       define A2MYEXTENSIONLIBPRIVATE      extern __private(A2MyExtensionLib)
+#   elif defined(_WIN32)
+#       define A2MYEXTENSIONLIBEXPORT       __declspec(dllexport)
+#       define A2MYEXTENSIONLIBGLOBAL       extern __declspec(dllexport)
+#       define A2MYEXTENSIONLIBPRIVATE      extern
+#   else
+#       define A2MYEXTENSIONLIBEXPORT
+#       define A2MYEXTENSIONLIBGLOBAL       extern
+#       define A2MYEXTENSIONLIBPRIVATE      extern
+#   endif
+#else
+#   if defined(__lint)
+#       define A2MYEXTENSIONLIBEXPORT       __export(A2MyExtensionLib)
+#       define A2MYEXTENSIONLIBGLOBAL       extern __global(A2MyExtensionLib)
+#   elif defined(_WIN32) && !defined(WNT_STATIC_LINK)
+#       define A2MYEXTENSIONLIBEXPORT      __declspec(dllimport)
+#       define A2MYEXTENSIONLIBGLOBAL       extern __declspec(dllimport)
+#   else
+#       define A2MYEXTENSIONLIBEXPORT
+#       define A2MYEXTENSIONLIBGLOBAL       extern
+#   endif
+#endif
+
+
+
+
+
+
+//.....................................................................................................................
+
+
+Class Name :- A2ExtensionTest.cpp
+
+
+
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the implementation for the Extension A2ExtensionTest
+ *
+ */
+//#include <A2MyExtensionLib/A2ExtensionTest.hxx>
+#include "A2ExtensionTest.h"
+#include<iostream>
+#include<base_utils\Mem.h>
+
+using namespace std;
+
+int A2ExtensionTest(METHOD_message_t* m, va_list args)
+{
+	int iFail          = ITK_ok;
+	int status_count = 0;
+	const char* rev_id = NULL;
+	tag_t source_rev   = NULLTAG;
+	tag_t*  status_list = NULLTAG;
+
+	TC_write_syslog("Entering function A2ExtensionTest...........\n ");
+	/* Get the parameters from the item_msg */
+	source_rev = va_arg(args, tag_t);
+	rev_id     = va_arg(args, const char*);
+
+	/* Get the release status count on the source item revision */
+
+	iFail = WSOM_ask_release_status_list(source_rev, &status_count, &status_list);
+
+	/* If status count is 0, throw error message */
+
+	if(status_count == 0){
+		EMH_store_error(EMH_severity_error,919002); 
+		return 919002;
+	}
+	/* Free the memory of release status list , if it has more then zero elements */
+
+	if(status_count>0){
+		MEM_free(status_list);
+	}
+
+	cout<<"Testing code execution"<<endl;
+	return iFail;     
+
+}
