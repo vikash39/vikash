@@ -1,0 +1,1 @@
+dmService1.getProperties(new ModelObject[]{phantom[b].bomLine},new String[]{"bl_item_current_id"});

@@ -1,0 +1,59 @@
+package FirstBom;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
+
+public class BomTask1 extends AbstractHandler {
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		// TODO Auto-generated method stub
+		
+		TCSession session=(TCSession)AIFUtility.getCurrentApplication().getSession();
+		TCComponentBOMLine target=(TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+		InterfaceAIFComponent tag=AIFUtility.getCurrentApplication().getTargetComponent();
+		TCComponentItem tag=(TCComponentItem)target.getProperty();
+		
+		String Name,Id,TopLine,Level,actualItemname;
+		try {
+			Name=target.getProperty("bl_item_object_name");
+			Id=target.getProperty("bl_item_item_id");
+			TopLine=target.getProperty("bl_level_starting_0");
+			Level=target.getProperty("bl_sequence_no");
+			
+			actualItemname=ta	
+			System.out.println("Name=="+Name);
+
+			System.out.println("Id=="+Id);
+
+			System.out.println("TopLine=="+TopLine);
+
+			System.out.println("Level=="+Level);
+			
+			
+			
+		} catch (TCException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//
+		
+		
+		return null;
+	}
+
+}
+
+
+
+
+https://ichat.intelizi.com/direct/T82004

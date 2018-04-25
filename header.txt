@@ -1,0 +1,77 @@
+#include <sys/timeb.h>
+#include <time.h>
+#include <tccore/method.h>
+#include <iostream>
+#include <tccore/aom_prop.h>
+#include <tccore/aom.h>
+#include <tccore/grm.h>
+#include <tccore/item.h>
+#include <pie/pie.h>
+#include <property/prop.h>
+#include <tc/preferences.h>
+#include <tccore/custom.h>
+#include <tcinit/tcinit.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <map>
+#include <strstream>
+#include <sstream>
+#include <fstream>
+#include <bom/bom.h>
+#include <ae/ae.h>
+#include <sa/tcfile.h>
+#include <res/res_itk.h>
+#include <tchar.h>
+#include <algorithm>
+#include <itk/bmf.h>
+#include <cfm/cfm.h>
+#include <iterator>
+#include <fclasses/tc_string.h>
+#include <fclasses/tc_date.h>
+#include <epm/epm.h>
+#include <form/form.h>
+#include <epm/epm_task_template_itk.h>
+#include <epm/epm_toolkit_tc_utils.h>
+#include <sa/sa.h>
+#include <pom/enq/enq.h>
+
+#include <list>
+#include <tc\folder.h>
+#include <tc\iman_arguments.h>
+#include <epm\signoff.h>
+
+#include <stdio.h>
+#include <iostream>
+#include <sstream> 
+#include <conio.h>
+#include <vector>
+#include <ctime>
+#include <string>
+#include <cstdio>
+#include <fstream>
+#include <windows.h>
+#include <tchar.h> 
+
+
+using namespace std;
+
+std::vector<std::string> splitString(std::string theString, string delim, bool splitQuotes);
+int find_execute_qry(char *pcQueryName, std::map<string,string> strQryEntriesMap, int* count,tag_t** ptLatestRev);
+int create_and_attach_dataset(tag_t tRev, string strOSFilePath, string strDatasetType, string strDatasetName);
+int create_dataset( const char* pcDatasetType, const char* pcDatasetName, const char* pcFormatName, tag_t *tCreatedDataset);
+int add_dataset_named_ref( string strOSFilePath, int iFileType, tag_t tDataset, const char* pcRefName);
+int update_Table_Attributes(tag_t childRevTag, std::vector<string> tableLine);
+int INZ_Release_Template(char * cRootID);
+void INZ_ReleaseChildLines(tag_t top_line);
+
+//Constants
+#define ITEM_ID																				"Item ID"
+#define OBJECT_TYPE																			"Type"
+#define QUERYITEM																			"Item..."
+#define TEXT_FORMATTYPE																		"TEXT"
+#define MSWORDX																				"word"
+
+#define BINARY_REF                                                                          "BINARY"
+#define JPEG                                                                                "JPEG_Reference"                                                                           
+	

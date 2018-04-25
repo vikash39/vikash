@@ -1,0 +1,68 @@
+public class fullexcel {
+	
+	//static int k=2;
+	public static void main(String args[]) //throws TCException, IOException
+	{
+		System.out.println("started");
+		
+		/*String filename="C:/myexcel.xlsx";
+		XSSFWorkbook hwb=new XSSFWorkbook ();
+		XSSFSheet sheet=hwb.createSheet("new sheet");
+		XSSFRow row=sheet.createRow(0);
+		row.createCell(0).setCellValue("id");
+		row.createCell(1).setCellValue("name");
+		row.createCell(2).setCellValue("level");*/
+		/*AbstractAIFSession session=AIFUtility.getCurrentApplication().getSession();
+		TCComponentBOMLine bomline = (TCComponentBOMLine)AIFUtility.getCurrentApplication().getTargetComponent();
+		XSSFRow row1=sheet.createRow(1);
+		row1.createCell(0).setCellValue(bomline.getProperty("bl_item_item_id"));
+		row1.createCell(1).setCellValue(bomline.getProperty("bl_rev_object_name"));
+		row1.createCell(2).setCellValue(bomline.getProperty("bl_level_starting_0"));
+		
+		int count=bomline.getChildrenCount();
+		AIFComponentContext[] child = bomline.getChildren();
+		
+		for(int i=0;i<count;i++)
+		{
+		
+		
+		         TCComponentBOMLine childbom = (TCComponentBOMLine)child[i].getComponent();
+		         meth(childbom,sheet);
+			
+			//row2.createCell((short)0).setCellValue(childbom.getProperty("bl_item_item_id"));
+			//row2.createCell((short)1).setCellValue(childbom.getProperty("bl_rev_object_name"));
+			
+			
+			
+			
+			
+		}*/
+		System.out.println("procedure done");
+		/*FileOutputStream fo=new FileOutputStream(filename);
+		System.out.println("file outpur stream");
+		hwb.write(fo);
+		fo.close();*/
+		System.out.println("ur file generated");
+	}
+
+	/*private static void meth(TCComponentBOMLine childbom,XSSFSheet sheet) throws TCException {
+		// TODO Auto-generated method stub
+		
+		XSSFRow row2=sheet.createRow(k);
+		//row2.createCell((short)2).setCellValue(childbom.getProperty("bl_level_starting_0"));
+		row2.createCell(0).setCellValue(childbom.getProperty("bl_item_item_id"));
+		row2.createCell(1).setCellValue(childbom.getProperty("bl_rev_object_name"));
+		row2.createCell(2).setCellValue(childbom.getProperty("bl_level_starting_0"));
+		k++;
+		
+		int count1=childbom.getChildrenCount();
+		AIFComponentContext[] child2 = childbom.getChildren();
+   for(int p=0;p<count1;p++)
+   {
+        TCComponentBOMLine childbom2 = (TCComponentBOMLine)child2[p].getComponent();
+        meth(childbom2,sheet);
+   }
+		
+	}*/
+}
+

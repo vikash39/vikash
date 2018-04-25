@@ -1,0 +1,532 @@
+#include<iostream>
+#include<conio.h>
+#include<string>
+#include<fstream>
+#include<vector>
+#include<map>
+#include<Bom_Create_Utility.h>
+
+using namespace std;
+
+int ITK_user_main(int argc,char* argv[])
+{
+	int iStatus = ITK_ok;
+
+	ifstream fInputFile;
+	string line="";
+	string errorLog = "";
+
+	char  *user_id      	            = NULL,
+	      *user_pwd    		            = NULL;
+
+	string inputFilePath = "";
+	/*------DISPLAY HELP--------*/
+	 if ( ITK_ask_cli_argument("-help") || ITK_ask_cli_argument("-h") )
+    {
+        //display_help();
+        return iStatus;
+    }
+
+	 user_id    = ITK_ask_cli_argument("-u=");
+     user_pwd   = ITK_ask_cli_argument("-p=");
+	 inputFilePath	= ITK_ask_cli_argument("-f=");
+
+	 //_getch();
+	
+	 if((user_id != NULL) && (user_pwd != NULL) && (!inputFilePath.empty()))
+	{
+		iStatus=ITK_init_module(user_id,user_pwd,"");
+		if(iStatus==ITK_ok)
+		{
+			std::vector<string> splitVecStr;
+			try{
+				fInputFile.open(inputFilePath);
+				std::map<string,string> tcQueryMap;
+				while(getline(fInputFile,line))
+				{
+					splitVecStr.clear();
+					tcQueryMap.clear();
+
+					if(!line.empty())
+					{
+						if(line.find("|") != std::string::npos)
+						{
+							splitVecStr = splitString(line,"|",false);
+						}
+						else
+						{
+							errorLog = "Line doesnt contain Parent child spliter '|' ";
+						}
+
+						if(splitVecStr.size() == 3)
+						{
+							string parentItem = splitVecStr[0];
+							string childItem =  splitVecStr[1];
+							string datasetItem =  splitVecStr[2];
+							tag_t parentItemTag = NULLTAG;
+							tag_t parentRevTag = NULLTAG;
+							tag_t childItemTag = NULLTAG;
+							tag_t childRevTag = NULLTAG;
+							int iCount	= 0;
+
+							tag_t *mdtTag = NULLTAG;
+
+							/*parent Item*/
+							std::vector<string> parentLine = splitString(parentItem,"~",false);
+						
+							/*Search parent Item*/
+							/*QUERY MAP TO FIND 'Parent Item ID' */
+							tcQueryMap.insert(::make_pair((string)ITEM_ID,(string)parentLine[0]));
+							tcQueryMap.insert(::make_pair((string)OBJECT_TYPE,(string)parentLine[1]));
+				
+							iStatus = find_execute_qry(QUERYITEM,tcQueryMap,&iCount,&mdtTag);
+
+							if(iCount > 0 )
+							{
+									parentItemTag = mdtTag[0];
+									iStatus = ITEM_ask_latest_rev(parentItemTag,&parentRevTag);
+							}
+							else 
+							{
+								char* pcAttrName[] = {"item_id","object_name"};
+								char** pcAttrValue = NULL;
+								pcAttrValue = (char**)malloc(sizeof(char*) * 2);
+								pcAttrValue[0] = _strdup(parentLine[0].c_str());
+								pcAttrValue[1] = _strdup(parentLine[2].c_str());
+
+								iStatus = ITEM_create_item2(parentLine[1].c_str(),2,pcAttrName,pcAttrValue,NULL,&parentItemTag,&parentRevTag);		
+								AOM_save(parentItemTag);
+								AOM_save(parentRevTag);
+							}
+
+
+							/*Child Item*/
+							std::vector<string> childLine = splitString(childItem,"~",false);
+							iCount = 0;
+							mdtTag = NULLTAG;
+							tcQueryMap.clear();
+
+							/*Search Child Item*/
+							/*QUERY MAP TO FIND 'Parent Item ID' */
+							tcQueryMap.insert(::make_pair((string)ITEM_ID,(string)childLine[0]));
+							tcQueryMap.insert(::make_pair((string)OBJECT_TYPE,(string)childLine[1]));
+				
+							iStatus = find_execute_qry(QUERYITEM,tcQueryMap,&iCount,&mdtTag);
+
+							if(iCount > 0 )
+							{
+									parentItemTag = mdtTag[0];
+									iStatus = ITEM_ask_latest_rev(childItemTag,&childRevTag);
+							}
+							else 
+							{
+								char* pcAttrName[] = {"item_id","object_name"};
+								char** pcAttrValue = NULL;
+								pcAttrValue = (char**)malloc(sizeof(char*) * 2);
+								pcAttrValue[0] = _strdup(childLine[0].c_str());
+								pcAttrValue[1] = _strdup(childLine[2].c_str());
+
+								iStatus = ITEM_create_item2(parentLine[1].c_str(),2,pcAttrName,pcAttrValue,NULL,&childItemTag,&childRevTag);	
+							
+								AOM_save(childItemTag);
+								AOM_save(childRevTag);
+							}
+
+							/*Attach MSwordX Dataset to Child Rev*/
+							if(!datasetItem.empty() || datasetItem.length() > 0){
+								std::vector<string> datasetLine = splitString(datasetItem,"~",false);
+								create_and_attach_dataset(childRevTag, datasetLine[2], datasetLine[1], datasetLine[0]);
+								AOM_save(childRevTag);
+							}
+
+							/*BOM View Creation*/
+
+							tag_t tBomWindow	= NULLTAG;
+							tag_t tBOMTopLine	= NULLTAG;
+							tag_t tchildBOMLine = NULLTAG;
+							int icntBv = 0;
+							tag_t* tBvTag = NULLTAG;
+							tag_t tBomView = NULLTAG;
+							tag_t tBomViewRevision = NULLTAG;
+
+
+							BOM_create_window(&tBomWindow);
+
+							BOM_set_window_top_line(tBomWindow,NULLTAG,parentRevTag,NULLTAG,&tBOMTopLine);
+
+							ITEM_list_bom_views(parentItemTag,&icntBv,&tBvTag);
+							
+							if(icntBv > 0){
+								tBomView = tBvTag[0];
+							}
+							else
+							{
+								PS_create_bom_view(NULLTAG,"","",parentItemTag,&tBomView);
+
+								AOM_save(tBomView);
+								AOM_save(parentItemTag);
+							}
+
+							PS_create_bvr(tBomView,"","", false, parentRevTag,&tBomViewRevision);
+
+							AOM_save(tBomViewRevision);
+							AOM_save(parentRevTag);
+
+							BOM_line_add(tBOMTopLine,childItemTag,childRevTag,NULLTAG,&tchildBOMLine);
+
+							BOM_save_window(tBomWindow);
+
+							BOM_close_window(tBomWindow);
+
+						}
+						else
+							errorLog = "Line contains More than one Parent child spliter '|' ";
+					}
+
+					line="";
+				}
+			}
+			catch(...)
+			{
+				fInputFile.close();
+			}
+			fInputFile.close();
+		}
+	}
+	return 0;
+}
+
+/**************************************************************************************************
+*    Function Name       :find_execute_qry
+*    Description         :This function will EXECUTE QUERY BASED on Entries and values passed by function
+*    REQUIRED HEADERS    :rane_common.h
+*    INPUT/OUTPUT PARAMS : 
+*
+*   RETURN VALUE         :	tag_t  returnTag:tag of result .
+*   GLOBALS USED         :  None
+*   FUNCTIONS CALLED     :  None
+*   ALGORITHM            :  
+*******************************************************************************************************/
+int find_execute_qry(char *pcQueryName, std::map<string,string> strQryEntriesMap, int* count,tag_t** ptLatestRev)
+{
+    int iStatus			= ITK_ok;
+	int iTypesize		= 0;
+	int iAttrCount		= 0;
+
+	tag_t tQuery		= NULLTAG;
+
+   try {
+		*count = 0;
+		*ptLatestRev = NULL;
+		iStatus = QRY_find2(pcQueryName, &tQuery);   
+		if(tQuery != NULLTAG)
+		{
+			char** pcEntries = NULL;
+			char** pcValues = NULL;
+
+			iTypesize = (int)strQryEntriesMap.size();
+			//Allocate memory to query entries and values
+			pcEntries = (char**)MEM_alloc(iTypesize*sizeof(char*));
+			pcValues = (char**)MEM_alloc(iTypesize*sizeof(char*));
+			for ( map<string, string>::iterator it = strQryEntriesMap.begin( ); it != strQryEntriesMap.end( ); it++ )
+			{		
+				pcEntries[iAttrCount] = (char*)MEM_alloc((int)((strlen(it->first.c_str()) +1)*sizeof(char)));			
+				pcValues[iAttrCount] = (char*)MEM_alloc((int)((strlen(it->second.c_str()) +1)*sizeof (char)));
+		        tc_strcpy(pcEntries[iAttrCount], it->first.c_str());
+				tc_strcpy(pcValues[iAttrCount], it->second.c_str());
+				iAttrCount++;
+			}						
+
+			//Execute query
+			iStatus = QRY_execute(tQuery, iAttrCount, pcEntries, pcValues, count, ptLatestRev);
+
+			for (int i=0; i<iTypesize; i++ )
+			{
+				MEM_free(pcEntries[i]);
+				MEM_free(pcValues[i]);
+			}
+			MEM_free(pcEntries);
+			MEM_free(pcValues);
+		}
+    }
+	catch(...)
+    {
+		if(iStatus == ITK_ok)
+		{
+			/**Unknow error*/
+		}
+    }
+    
+    return iStatus;
+}
+
+/***************************************************************************************
+*   Function Name       : splitString
+*   Description         : This function splits the given string by a given delimiter.
+*   REQUIRED HEADERS    : 
+*                         
+*   INPUT/OUTPUT PARAMS : string theString
+*                         char delim
+*
+*   RETURN VALUE        : vector of elements
+*                        
+*   GLOBALS USED        :None
+*   FUNCTIONS CALLED    :
+*
+*   ALGORITHM           :
+*
+*********************************************************************************************/
+std::vector<std::string> splitString(std::string theString, string delim, bool splitQuotes) 
+{
+    std::vector<std::string> elems;
+	std::string quotedDelim = "\"" + delim;
+	std::string replaceStr = "#~#";
+	std::string searchStr = "";
+	char quotes = '"';
+
+	if(splitQuotes)
+	{
+		if( theString != "" && theString.length() > 0 )
+		{
+			size_t it = 0;
+			while(it != string::npos && it < theString.length())
+			{
+				if(it == 0)
+				{
+					if(quotes == theString[0])
+					{
+						it = theString.find(quotedDelim);
+						searchStr = quotedDelim;
+					}
+					else
+					{
+						it = theString.find(delim);
+						searchStr = delim;
+					}
+				}
+				else
+				{
+					if(theString[it] == quotes)
+					{
+						theString.replace(it, 1, "");
+						it = theString.find(quotedDelim,it);
+						searchStr = quotedDelim;
+					}
+					else
+					{
+						it = theString.find(delim,it);
+						searchStr = delim;
+					}
+				}
+
+				if(it != string::npos)
+				{
+					theString.replace(it, searchStr.length(), replaceStr);
+					it += replaceStr.length();
+				}
+			}
+
+			if(theString[0] == quotes)
+			{
+				theString.replace(0,1,"");
+			}
+			size_t strLen = theString.length() - 1;
+			if(theString[strLen] == quotes)
+			{
+				theString.replace(strLen, 1, "");
+			}
+		}
+
+		delim = "#~#";
+	}
+
+	auto start = 0U;
+    auto end = theString.find(delim);
+    while (end != std::string::npos)
+    {
+		elems.push_back( theString.substr(start, end - start) );
+        start = (int)(end + delim.length());
+        end = theString.find(delim, start);
+    }
+	elems.push_back(theString.substr(start, end));
+    return elems;
+}
+/*******************************************************************************
+ * Function Name			: create_and_attach_dataset
+ * Description				: Creates dataset and attaches the named reference to it
+ *
+ * REQUIRED HEADERS :
+ * INPUT/OUTPUT PARAMS      : tRev   (I)	- Revision tag_t
+ *							  strOSFilePath  (I)      - OS file path string
+ *							  strDatasetType  (I)      - Dataset type string
+ *							: strDatasetName (I)     -  Dataset name string
+ * RETURN VALUE				: int : 0/error code
+ * GLOBALS USED				:
+ * FUNCTIONS CALLED			:
+ * ALGORITHM				: 
+ * NOTES					:
+ ******************************************************************************/
+int create_and_attach_dataset(tag_t tRev, string strOSFilePath, string strDatasetType, string strDatasetName)
+{
+	int iStatus	= ITK_ok;
+
+
+	try
+	{
+		tag_t tDatasetRel					= NULLTAG;
+		bool bIsDatasetExist				= false;
+		tag_t tNewFile						= NULLTAG;
+		
+		tag_t tDatasetType					= NULLTAG;
+		tag_t tCreatedDataset				= NULLTAG;
+		tag_t tDatasetTool					= NULLTAG;
+		char *pcDatasetFormat				= NULL;
+		tag_t tRelation						= NULLTAG;
+		char* pcRefName						= NULL;
+		tag_t tRefObj						= NULLTAG;
+
+		AE_reference_type_t targetRefType	= AE_ASSOCIATION; 
+
+		
+		if(tRev != NULLTAG) 
+		{
+			//check whether the dataset already exists
+			iStatus = GRM_find_relation_type( "IMAN_specification", &tDatasetRel );			
+			//create the dataset and attach a named reference
+			iStatus = create_dataset( strDatasetType.c_str(), strDatasetName.c_str(), TEXT_FORMATTYPE, &tCreatedDataset );
+			if(tCreatedDataset != NULLTAG) 
+			{
+				//adding dataset named refs
+				iStatus =	add_dataset_named_ref( strOSFilePath, SS_BINARY, tCreatedDataset, MSWORDX );
+						
+				if(tDatasetRel != NULLTAG)
+				{
+					iStatus = GRM_create_relation( tRev, tCreatedDataset, tDatasetRel, NULLTAG, &tRelation );
+							
+					iStatus = GRM_save_relation( tRelation );
+							
+				}
+				//ITK_set_bypass(true);
+
+				//iStatus = AOM_refresh( tRev, false );
+						
+				//ITK_set_bypass(false);
+			}		
+		}
+		
+	}
+	catch(...)
+	{
+		if(iStatus == ITK_ok)
+		{
+			/*unknown error*/
+		}
+	}
+
+	
+	return iStatus;
+}
+/*******************************************************************************
+ * Function Name			: Create_dataset
+ * Description				: Creates Dataset
+ *
+ * REQUIRED HEADERS :
+ * INPUT/OUTPUT PARAMS      : pcDatasetType   (I)	- dataset type const char*
+ *							  pcDatasetName  (I)      - Dataset name const char*
+ *							  pcFormatName  (I)      - format name const char*
+ *							  tCreatedDataset (O)	- Created dataset tag_t*
+ * RETURN VALUE				: int : 0/error code
+ * GLOBALS USED				:
+ * FUNCTIONS CALLED			:
+ * ALGORITHM				: 
+ * NOTES					:
+ ******************************************************************************/
+int create_dataset( const char* pcDatasetType, const char* pcDatasetName, const char* pcFormatName, tag_t *tCreatedDataset)
+{
+	int iStatus	= ITK_ok;
+
+	try
+	{
+		tag_t tDatasetType		= NULLTAG;
+		tag_t tDatasetTool		= NULLTAG;
+
+		iStatus = AE_find_datasettype2( pcDatasetType, &tDatasetType );
+		
+		if(tDatasetType != NULLTAG) 
+		{
+			//Creates the dataset
+			iStatus = AE_create_dataset_with_id( tDatasetType, pcDatasetName, NULL, NULL, NULL, tCreatedDataset );
+			
+			//Gets and sets the dataset tool
+			iStatus = AE_ask_datasettype_def_tool( tDatasetType, &tDatasetTool );
+			
+			if(tCreatedDataset != NULLTAG) 
+			{
+				iStatus = AE_set_dataset_format2( *tCreatedDataset, pcFormatName );
+				
+
+				iStatus = AE_set_dataset_tool( *tCreatedDataset, tDatasetTool );
+				
+
+				iStatus = AOM_save( *tCreatedDataset );
+				
+			}
+		}
+	}
+	catch(...)
+	{
+		if(iStatus == ITK_ok)
+		{
+			/*unknown error*/
+		}
+	}
+	
+	return iStatus;
+}
+
+/*******************************************************************************
+ * Function Name			: add_dataset_named_ref
+ * Description				: Add named reference to the dataset
+ *
+ * REQUIRED HEADERS :
+ * INPUT/OUTPUT PARAMS      : strOSFilePath   (I)	- os file path string
+ *							  iFileType  (I)      - file type int
+ *							  tDataset  (I)      - dataset object tag_t
+ *							  pcRefName	(I)		- reference name const char*
+ * RETURN VALUE				: int : 0/error code
+ * GLOBALS USED				:
+ * FUNCTIONS CALLED			:
+ * ALGORITHM				: 
+ * NOTES					:
+ ******************************************************************************/
+
+int add_dataset_named_ref( string strOSFilePath, int iFileType, tag_t tDataset, const char* pcRefName)
+{
+	int iStatus	= ITK_ok;
+	
+	try
+	{
+		tag_t tNewFile			= NULLTAG;
+		IMF_file_t fileDescp;
+
+		iStatus = IMF_import_file( strOSFilePath.c_str(), NULL, iFileType, &tNewFile, &fileDescp );
+		
+		iStatus = IMF_close_file( fileDescp );
+		
+		iStatus = AOM_save( tNewFile );
+		
+		iStatus = AOM_refresh( tDataset, true );
+		
+		iStatus = AE_add_dataset_named_ref2( tDataset, pcRefName, AE_ASSOCIATION, tNewFile );
+		
+		iStatus = AOM_save( tDataset );
+		
+		iStatus = AOM_refresh( tDataset, false );
+	}
+	catch(...)
+	{
+		/**/
+	}
+	
+	return iStatus;
+}
