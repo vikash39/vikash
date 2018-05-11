@@ -1,0 +1,298 @@
+DLL .CXX File :- iman_save(Operation in extension, PreCondation ). Example of extension :- when itemRevision check out then check in the form "object_desc" field is filled or not if not filled then through error, for example :-  "first fill the form "object_desc" then check in operation perform " .  
+
+
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the implementation for the Extension A2CustomeTestExtension
+ *
+ */
+#include "A2CustomeTestExtension.hxx"
+#include <iostream>
+#include <tccore\grm.h>
+#include <tccore\tctype.h>
+#include <tccore\aom_prop.h>
+
+using namespace std;
+
+int A2CustomeTestExtension( METHOD_message_t * msg, va_list args )
+{
+ 
+
+	std::cout<< "TC DLL Loaded successfully"<<std::endl;
+
+	
+	int   iStatus        = ITK_ok;
+	char* description    = NULL;
+	int   count_list_Obj = 0;
+	char* current_desc   = NULL;
+	
+	tag_t  source_rev        = NULLTAG;
+	tag_t  relation_tag      = NULLTAG;
+	tag_t* form_tag          = NULLTAG;
+	tag_t  findRelation_tag  = NULLTAG;
+	tag_t  find_tag          = NULLTAG;
+
+	//tag_t secondary_objects = NULLTAG;
+	//tag_t* description_tag = NULLTAG;
+	
+
+	/* Get the parameters from the item_msg */
+	cout<<"Testing code execution"<<endl;
+
+	source_rev = va_arg(args, tag_t);
+	TC_write_syslog("Entering function A2TestObject...........\n ");
+	
+		//Find Relation
+		iStatus = GRM_find_relation_type("IMAN_specification",&relation_tag);
+		iStatus = GRM_list_secondary_objects_only(source_rev, relation_tag, &count_list_Obj, &form_tag );
+
+		printf("Secondat count is :%d=",count_list_Obj);
+		
+		
+
+		for( int i=0; i<count_list_Obj;i++){
+			if(form_tag != NULL){
+
+				iStatus = AOM_ask_value_string(form_tag[i], "object_desc", &current_desc);
+				std::cout<<"dec is %s:  "<<current_desc<<endl;
+				if(tc_strcmp(current_desc,"")==0){
+					 //EMH_store_error(EMH_severity_error, 919002);
+					 std::cout<<"EMH_store_error  fill object_desc property first"<<endl;
+
+					 EMH_store_error_s1(EMH_severity_error,919002,"");
+					 return 919002; 
+					
+				}
+			}
+		}                                                                                                                                                                       
+	
+	cout<<"Testing code execution"<<endl;     
+
+
+ return iStatus;
+
+
+
+
+
+// return 0;
+
+}
+
+
+
+
+
+
+//......................................................................................
+
+XML File Name :- ue_errors.xml ( D:\app\teamcenter\lang\textserver\en_US)
+
+<?xml version="1.0" encoding="us-ascii" standalone="yes"?>
+<!--
+===============================================================================
+                Copyright (c) 2003-2005 UGS Corporation
+                   Unpublished - All Rights Reserved
+===============================================================================
+File description:
+
+            Filename:
+            Module:
+
+            XML File defining ___ module text/error messages.
+            This was previously done in UIH/UIL/VIL format.
+ -->
+<textsrv filename="ue_errors.xml">
+<errors module="ue" error_base="919000">
+<error id="1">USER_EXIT:    User Exit %1$ failed</error>
+<error id= "2"> fill object_desc property first %1$ </error>
+</errors>
+</textsrv>
+
+
+
+
+
+
+
+
+
+
+// ....................................................................
+
+This is separate file doing checkout & chickin , & initiate workflow 
+
+
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the implementation for the Extension A2CustomeTestExtension
+ *
+ */
+#include "A2CustomeTestExtension.hxx"
+#include <iostream>
+#include <tccore\grm.h>
+#include <tccore\tctype.h>
+#include <tccore\aom_prop.h>
+#include <tccore\workspaceobject.h>
+#include<res\res_itk.h>
+#include <epm\epm_task_template_itk.h>
+
+using namespace std;
+
+int A2CustomeTestExtension( METHOD_message_t * msg, va_list args )
+{
+ 
+
+	std::cout<< "TC DLL Loaded successfully"<<std::endl;
+
+	
+	int   iStatus        = ITK_ok;
+	char* description    = NULL;
+	int   count_list_Obj = 0;
+	char* current_desc   = NULL;
+	int   status_count   = 0;
+	const char* rev_id   =NULL; 
+
+	tag_t  source_rev        = NULLTAG;
+	tag_t  relation_tag      = NULLTAG;
+	tag_t* form_tag          = NULLTAG;
+	tag_t  findRelation_tag  = NULLTAG;
+	tag_t  find_tag          = NULLTAG;
+	tag_t* status_list       = NULLTAG;
+	tag_t template_tag       = NULLTAG;
+
+	 tag_t new_item = NULL;
+     tag_t new_rev = NULL;
+	 tag_t item_tag = NULLTAG;
+     tag_t rev_tag = NULLTAG;
+	 tag_t job_tag = NULLTAG;
+
+	 int attachment_type = EPM_target_attachment;
+
+	//tag_t secondary_objects = NULLTAG;
+	//tag_t* description_tag = NULLTAG;
+	
+
+	/* Get the parameters from the item_msg */
+	cout<<"Testing code execution"<<endl;
+
+	source_rev = va_arg(args, tag_t);
+	/*
+	rev_id     = va_arg(args, const char*);
+	
+	new_item = va_arg(args, tag_t);
+    new_rev = va_arg(args, tag_t);
+    item_tag = new_item;
+    rev_tag = new_rev;
+	*/
+	tag_t *inputAttachments = NULLTAG;
+
+	inputAttachments = (tag_t *)MEM_alloc(1*sizeof(tag_t));
+
+	inputAttachments[0] = source_rev;
+	
+	TC_write_syslog("Entering function A2TestObject...........\n ");
+
+	/* Get the release status count on the source item revision */
+	//iStatus = WSOM_ask_release_status_list(source_rev, &status_count, &status_list);
+	 
+	
+
+
+	
+		//Find Relation
+		iStatus = GRM_find_relation_type("IMAN_specification",&relation_tag);
+		iStatus = GRM_list_secondary_objects_only(source_rev, relation_tag, &count_list_Obj, &form_tag );
+
+		printf("Secondat count is :%d=",count_list_Obj);
+		
+		
+
+		for( int i=0; i<count_list_Obj;i++){
+			if(form_tag != NULL){
+
+				iStatus = AOM_ask_value_string(form_tag[i], "object_desc", &current_desc);
+				std::cout<<"dec is %s:  "<<current_desc<<endl;
+				if(tc_strcmp(current_desc,"")==0){
+					 //EMH_store_error(EMH_severity_error, 919002);
+					 std::cout<<"EMH_store_error  fill object_desc property first"<<endl;
+					 //iStatus = RES_checkout2(source_rev, NULL, NULL, NULL, RES_EXCLUSIVE_RESERVE);
+
+
+					 EMH_store_error_s1(EMH_severity_error,919002,"");
+
+					 /* WorkFlow initiation code */
+
+
+					 return 919002; 
+					
+				}
+			}
+		}
+
+		
+					iStatus = EPM_find_template2("workFlowTest",0, &template_tag);
+					iStatus = RES_checkout2(source_rev, NULL, NULL, NULL, RES_EXCLUSIVE_RESERVE);
+					cout<<"Findeded Template::"<<iStatus<<endl;
+					iStatus = RES_checkin(source_rev);
+
+					logical isWorkflowInitiated = false;
+
+					iStatus = AOM_ask_value_logical(source_rev, "fnd0InProcess", &isWorkflowInitiated);
+
+					cout<<"Workflow Initiated -> "<<isWorkflowInitiated <<endl;
+
+					if(!isWorkflowInitiated)
+					iStatus = EPM_create_process("MyProcess","Processing" ,template_tag , 1 ,inputAttachments, &attachment_type, &job_tag);
+
+					cout<<"initiate workflow done ::"<<iStatus<<endl;
+		/* if status count is zero then initiate the workflow */
+		/*
+	if(status_count == 0){
+		 std::cout<<"EMH_store_msg, you can not initate workflow process bcz already initiated"<<endl;
+		EMH_store_error_s1(EMH_severity_error,919002,"");
+	    return 919002; 
+	} */
+
+
+
+	cout<<"Testing code execution"<<endl;     
+
+
+ return iStatus;
+
+
+
+
+
+// return 0;
+
+}
+
+
+
+
+
+
+
+
