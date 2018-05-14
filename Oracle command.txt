@@ -1,0 +1,17 @@
+1. Login database oracle :-
+
+C:\Users\IZCHND045>sqlplus infodba/infodba
+
+2. Get current user name :- 
+
+SQL> select user from dual;
+SQL> show user
+SQL> select user current_user from dual;
+
+3. Get Global name :- 
+
+SQL> select * from global_name;
+
+Result:-  TC11
+
+SQL> select ora_database_name from dual;

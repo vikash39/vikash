@@ -1,0 +1,186 @@
+C:\app\IZCHND045\product\12.1.0\dbhome_1\OCI\include
+
+
+
+C:\app\IZCHND045\product\12.1.0\dbhome_1\OCI\lib\MSVC\vc11
+
+
+C:\app\IZCHND045\product\12.1.0\dbhome_1\OCI\lib\MSVC\vc11\*.lib
+
+
+C:\Users\IZCHND045>hostname
+IZCHND045-PC
+
+
+
+GO to This link for more information :- https://oradim.blogspot.in/2009/07/getting-started-with-occi-windows.html
+
+More info :- https://oradim.blogspot.in/
+
+//======================================================================================================================
+
+Header File :- Emp.h
+
+/* 
+* A simple OCCI test application 
+* This file contains the Employees class declaration 
+*/
+
+#include <occi.h> 
+#include <iostream> 
+#include <iomanip>
+
+using namespace oracle::occi; 
+using namespace std;
+
+class Emp { 
+public: 
+  Emp(); 
+  virtual ~Emp();
+
+  void List();
+
+private: 
+  Environment *env; 
+  Connection  *con;
+
+  string user; 
+  string passwd; 
+  string db; 
+};
+
+
+
+//=======================================================================================================================
+
+CPP file :- Emp.cpp
+
+
+/* 
+* A simple OCCI test application 
+* This file contains the Employees class implementation 
+*/
+
+#include "Emp.h"
+
+using namespace std; 
+using namespace oracle::occi;
+
+int main (void) 
+{ 
+  /* 
+   * create an instance of the Employees class, 
+   * invoke the List member, delete the instance, 
+   * and prompt to continue... 
+   */
+
+  Emp *pEmployees = new Emp();
+
+  pEmployees->List();
+
+  delete pEmployees;
+
+  cout << "ENTER to continue...";
+
+  cin.get();
+
+  return 0; 
+}
+
+Emp::Emp() 
+{ 
+  /* 
+   * connect to the test database as the HR 
+   * sample user and use the EZCONNECT method 
+   * of specifying the connect string. Be sure 
+   * to adjust for your environment! The format 
+   * of the string is host:port/service_name 
+   */
+
+  user = "infodba"; 
+  passwd = "infodba"; 
+  db = "IZCHND045-PC:1521/TC11";
+
+  env = Environment::createEnvironment(Environment::DEFAULT);
+
+  try 
+  { 
+    con = env->createConnection(user, passwd, db); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage();
+
+    exit(EXIT_FAILURE); 
+  } 
+}
+
+Emp::~Emp() 
+{ 
+  env->terminateConnection (con);
+
+  Environment::terminateEnvironment (env); 
+}
+
+void Emp::List() 
+{ 
+  /* 
+   * simple test method to select data from 
+   * the employees table and display the results 
+   */
+
+  Statement *stmt = NULL; 
+  ResultSet *rs = NULL; 
+  string sql = "select emp_id, first_name, last_name, mobile_no from mytable order by last_name, first_name";
+
+  try 
+  { 
+    stmt = con->createStatement(sql); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage(); 
+  }
+
+  if (stmt) 
+  { 
+    try 
+    { 
+      stmt->setPrefetchRowCount(32);
+
+      rs = stmt->executeQuery(); 
+    } 
+    catch (SQLException& ex) 
+    { 
+      cout << ex.getMessage(); 
+    }
+
+    if (rs) 
+    { 
+      cout << endl << setw(8) << left << "ID" 
+           << setw(22) << left << "FIRST NAME" 
+           << setw(27) << left << "LAST NAME" 
+		   << setw(32) << left << "MOBILE NO" 
+           << endl; 
+      cout << setw(8) << left << "======" 
+           << setw(22) << left << "====================" 
+           << setw(27) << left << "======================" 
+		   << setw(32) << left << "=========================="
+           << endl;
+
+      while (rs->next()) { 
+        cout << setw(8) << left << rs->getString(1) 
+             << setw(22) << left << (rs->isNull(2) ? "n/a" : rs->getString(2)) 
+             << setw(27) << left << rs->getString(3) 
+			 << setw(32) << left << rs->getString(4)
+             << endl; 
+      }
+
+      cout << endl;
+
+      stmt->closeResultSet(rs); 
+    }
+
+    con->terminateStatement(stmt); 
+  } 
+}
