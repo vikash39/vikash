@@ -184,3 +184,124 @@ void Emp::List()
     con->terminateStatement(stmt); 
   } 
 }
+
+
+
+//========================================================================================================================================
+Update database :- EmpUpdate.cpp
+
+/* 
+* A simple OCCI test application 
+* This file contains the Employees class implementation 
+*/
+
+#include "Emp.h"
+
+using namespace std; 
+using namespace oracle::occi;
+
+int main (void) 
+{ 
+  /* 
+   * create an instance of the Employees class, 
+   * invoke the List member, delete the instance, 
+   * and prompt to continue... 
+   */
+
+  Emp *pEmployees = new Emp();
+
+  pEmployees->List();
+
+  delete pEmployees;
+
+  cout << "ENTER to continue...";
+
+  cin.get();
+
+  return 0; 
+}
+
+Emp::Emp() 
+{ 
+  /* 
+   * connect to the test database as the HR 
+   * sample user and use the EZCONNECT method 
+   * of specifying the connect string. Be sure 
+   * to adjust for your environment! The format 
+   * of the string is host:port/service_name 
+   */
+
+  user = "infodba"; 
+  passwd = "infodba"; 
+  db = "IZCHND045-PC:1521/TC11";
+
+  env = Environment::createEnvironment(Environment::DEFAULT);
+
+  try 
+  { 
+    con = env->createConnection(user, passwd, db); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage();
+
+    exit(EXIT_FAILURE); 
+  } 
+}
+
+Emp::~Emp() 
+{ 
+  env->terminateConnection (con);
+
+  Environment::terminateEnvironment (env); 
+}
+
+void Emp::List() 
+{ 
+  /* 
+   * simple test method to select data from 
+   * the employees table and display the results 
+   */
+
+  Statement *stmt = NULL; 
+  ResultSet *rs = NULL; 
+  string sql = "UPDATE mytable SET last_name = 'Anderson' WHERE emp_id = 103";
+
+  try 
+  { 
+    stmt = con->createStatement(sql); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage(); 
+  }
+
+  if (stmt) 
+  { 
+    try 
+    { 
+      stmt->setPrefetchRowCount(32);
+
+      rs = stmt->executeQuery(); 
+    } 
+    catch (SQLException& ex) 
+    { 
+      cout << ex.getMessage(); 
+    }
+
+    if (rs) 
+    { 
+     
+      cout << endl;
+
+      stmt->closeResultSet(rs); 
+    }
+
+    con->terminateStatement(stmt); 
+  } 
+
+}
+
+
+
+
