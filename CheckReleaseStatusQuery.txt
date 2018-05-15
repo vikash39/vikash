@@ -1,0 +1,119 @@
+
+Class Name :- CheckRevStatus.cpp
+=> This one check itemRevision is released or not, then print some value in both cases 
+
+
+
+//====================================
+
+#include <tccore\item.h>
+#include <stdio.h>
+#include <conio.h>
+#include <tc\tc.h>
+#include <tccore\aom.h>
+#include <qry\qry.h>
+#include <stdlib.h>
+#include <tccore\aom_prop.h>
+#include <iostream>
+
+using namespace std;
+
+int ITK_user_main(int argc, char* argv[])
+{
+	int istatus     = ITK_ok;
+	int iEntryCnt   = 0;
+	int iNoFound    = 0;
+	int n_statuses  = 0;
+	int *isReleased = 0;
+
+	char *username = NULL;
+	char *userpwd = NULL;
+	char *grp = NULL;
+	
+	
+	
+
+
+
+	tag_t tQueryTag      = NULLTAG;
+	tag_t *tResults      = NULLTAG;
+	tag_t latest_rev_tag = NULLTAG;
+	tag_t *statuses      = NULLTAG;
+
+
+	char **SArryEntries = NULL;
+	char **SArryValues  = NULL;
+	char **sEntries     = NULL;
+	char **sValues      = NULL;
+	char *item_id       = NULL;
+	char *rev_id        = NULL;
+
+	cout<<"Entered into main function"<<endl;
+
+ 	username = ITK_ask_cli_argument("-u=");
+	userpwd = ITK_ask_cli_argument("-p=");
+	grp = ITK_ask_cli_argument("-g=");
+	cout<<"USer NAme: " <<username<<endl;
+	cout<<"Password: "<<userpwd<<endl;
+	cout<<"group: "<<grp<<endl;
+
+	istatus = ITK_init_module(username,userpwd,grp);
+	cout<<"Entered into main function->IStatus: "<<istatus<<endl;
+	
+istatus = QRY_find2("General...",&tQueryTag);
+cout<<"QRY_find2->IStatus: "<<istatus<<endl;
+istatus = QRY_find_user_entries(tQueryTag,&iEntryCnt,&SArryEntries,&SArryValues);
+
+sEntries = (char **) malloc(sizeof(2));
+sEntries[0] = (char*) malloc(sizeof(char*));
+sEntries[0] = SArryEntries[2];
+
+sValues = (char **) malloc(sizeof(2));
+sValues[0] = (char*) malloc(sizeof(char*));
+sValues[0] = "CADItem";
+
+istatus = QRY_execute(tQueryTag,1,sEntries,sValues,&iNoFound,&tResults);
+
+
+
+int status_count = 0;
+tag_t* status_list = NULLTAG;
+cout<<"released items are"<<endl;
+for(int i=0;i<iNoFound;i++)
+{
+
+	istatus=ITEM_ask_latest_rev(tResults[i],&latest_rev_tag);
+	istatus=AOM_ask_value_string(tResults[i],"item_id",&item_id);
+	istatus=AOM_ask_value_string(latest_rev_tag,"item_revision_id",&rev_id);
+	istatus = WSOM_ask_release_status_list(latest_rev_tag,&status_count,&status_list);
+
+if (status_count>0)
+{
+cout<<"item_id"<<item_id<<endl;
+cout<<"latest_rev_id "<<rev_id<<endl;
+}
+
+
+}
+printf("\n");
+printf("\n");
+cout<<"Not released items are"<<endl;
+for(int i=0;i<iNoFound;i++)
+{
+
+	istatus=ITEM_ask_latest_rev(tResults[i],&latest_rev_tag);
+	istatus=AOM_ask_value_string(tResults[i],"item_id",&item_id);
+	istatus=AOM_ask_value_string(latest_rev_tag,"item_revision_id",&rev_id);
+	istatus = WSOM_ask_release_status_list(latest_rev_tag,&status_count,&status_list);
+
+if (status_count==0)
+{
+	cout<<"item_id"<<item_id<<endl;
+	cout<<"latest_rev_id "<<rev_id<<endl;
+}
+
+
+}
+
+return 0;
+}

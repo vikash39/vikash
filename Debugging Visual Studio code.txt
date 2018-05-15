@@ -1,0 +1,34 @@
+This is the bat file to lunch Visual Studio for debugging purpose.
+
+You have to save with .bat file (For Example :- VS.bat)
+
+====================================================
+@echo off
+@echo setting TCE Variables
+SET TC_ROOT=D:\app\teamcenter
+SET TC_DATA=D:\app\tcdata
+call %TC_DATA%\tc_profilevars
+
+@echo Launching Visual Studio
+call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\WDExpress.exe"
+
+=======================================================================================
+
+
+You have to add below thing in Visual Studio :-
+
+Go to the property :- C/C++ -> Preprocessor (Add below line)
+
+IPLIB=none
+_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH
+_ALLOW_RUNTIME_LIBRARY_MISMATCH
+
+
+
+
+//======================================
+Additional no need :- 
+
+go to Debugger property and set "Environment"
+
+PATH=D:\app\teamcenter\bin;$(Path)
