@@ -1,0 +1,133 @@
+package com.tc.soa;
+
+import java.io.FileWriter;
+
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+
+import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentQuery;
+import com.teamcenter.rac.kernel.TCSession;
+import com.teamcenter.schemas.soa._2006_03.exceptions.ServiceException;
+import com.teamcenter.services.rac.query.SavedQueryService;
+import com.teamcenter.services.rac.query._2006_03.SavedQuery.GetSavedQueriesResponse;
+import com.teamcenter.services.rac.query._2007_06.SavedQuery.ExecuteSavedQueriesResponse;
+import com.teamcenter.services.rac.query._2007_06.SavedQuery.SavedQueryInput;
+import com.teamcenter.services.rac.query._2007_06.SavedQuery.SavedQueryResults;
+
+public class SavedQuery extends AbstractHandler{
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException {
+		
+		TCComponentQuery query = null;
+		TCSession session = (TCSession) AIFUtility.getCurrentApplication().getSession();
+		
+		
+
+		SavedQueryService queryService = SavedQueryService.getService(session);
+
+		try
+		       {
+
+		           // *****************************
+		           // Execute the service operation
+		           // *****************************
+		GetSavedQueriesResponse savedQueries = queryService.getSavedQueries();
+
+
+		           if (savedQueries.queries.length == 0)
+		           {
+		               System.out.println("There are no saved queries in the system.");
+		              // return;
+		           }
+
+		           // Find one called 'Item Name'
+		           for (int i = 0; i < savedQueries.queries.length; i++)
+		           {
+
+		               if (savedQueries.queries[i].name.equals("Item Name"))
+		               {
+		                   query = savedQueries.queries[i].query;
+		                   break;
+		               }
+		           }
+		       }
+		       catch (ServiceException e)
+		       {
+		           System.out.println("GetSavedQueries service request failed.");
+		           System.out.println(e.getMessage());
+		          // return;
+		       }
+
+		       if (query == null)
+		       {
+		           System.out.println("There is not an 'Item Name' query.");
+		          // return;
+		       }
+		      
+
+		       try
+		       {
+		           //Search for all Items, returning a maximum of 25 objects
+		           SavedQueryInput savedQueryInput[] = new SavedQueryInput[1];
+		           savedQueryInput[0] = new SavedQueryInput();
+		           savedQueryInput[0].query = query;
+		           savedQueryInput[0].maxNumToReturn = 25;
+		           savedQueryInput[0].limitList = new TCComponent[0];
+		           savedQueryInput[0].entries = new String[]{"Item Name" };
+		           savedQueryInput[0].values = new String[1];
+		           savedQueryInput[0].values[0] = "*";
+
+		           
+		           //*****************************
+		           //Execute the service operation
+		           //*****************************
+		           ExecuteSavedQueriesResponse savedQueryResult = queryService.executeSavedQueries(savedQueryInput);
+		           SavedQueryResults found = savedQueryResult.arrayOfResults[0]; 
+		        
+		           System.out.println("");
+		           System.out.println("Found Items:");
+		          
+		           
+		             
+		           	TCComponent [] components = found.objects;
+		           	
+		           	for(int i=0; i<components.length; i++)
+		           	{
+		           		TCComponentItem item = (TCComponentItem) components[i];
+		           	
+		           		System.out.println("Object Name: " +item.getProperty("object_name"));
+		           	
+		           		String item1 = item.getProperty("object_name");
+		           	
+		           	
+		           		FileWriter writer = new FileWriter("D:\\Query\\test.txt", true);
+		           		writer.write(item1);
+		           		writer.write("\r\n"); 
+		           		writer.close();
+		           	
+		           	
+		           	}
+		   
+
+		       }
+		       catch (Exception e)
+		       {
+		           System.out.println("ExecuteSavedQuery service request failed.");
+		           System.out.println(e.getMessage());
+		         
+		       }
+		       return null;
+	}	
+		
+
+}
+
+		
+
+
+
