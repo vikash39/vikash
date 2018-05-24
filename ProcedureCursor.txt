@@ -1,0 +1,50 @@
+/* Run in new window this code in SQL Developer */
+
+
+
+DECLARE 
+  c_dbuser1 SYS_REFCURSOR;
+  temp_dbuser mytable%ROWTYPE;
+BEGIN
+ 
+  --records are assign to cursor 'c_dbuser'
+  test('',c_dbuser1);
+ 
+  LOOP
+ 
+        --fetch cursor 'c_dbuser' into dbuser table type 'temp_dbuser'
+	FETCH c_dbuser1 INTO temp_dbuser;
+ 
+        --exit if no more records
+        EXIT WHEN c_dbuser1%NOTFOUND;
+
+        --print the matched username
+        dbms_output.put_line(temp_dbuser.FIRST_NAME);
+        dbms_output.put_line(temp_dbuser.mobile_no);
+ 
+  END LOOP;
+ 
+  CLOSE c_dbuser1;
+ 
+END;
+/
+
+
+//============================================================================================
+
+Create Procedure :- Procedure name(Test);
+
+
+create or replace procedure test( empid IN number,c_dbuser OUT SYS_REFCURSOR) as
+
+fname varchar2(20);
+lname varchar2(20);
+mobile varchar2(12);
+
+begin
+  OPEN c_dbuser FOR
+  SELECT * FROM mytable;
+  
+  
+  
+end;

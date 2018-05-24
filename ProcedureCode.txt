@@ -1,0 +1,71 @@
+#include "CallProcedure.h"
+#include<stdio.h>
+#include <conio.h>
+int main()
+{
+
+	cout<<"printing the name"<<endl;
+
+	Emp *empObject = new Emp;
+
+	empObject->List();
+
+
+
+	getch();
+
+	return 0;
+}
+//Employee Constructor
+Emp::Emp() 
+{ 
+  /* 
+   * connect to the test database as the HR 
+   * sample user and use the EZCONNECT method 
+   * of specifying the connect string. Be sure 
+   * to adjust for your environment! The format 
+   * of the string is host:port/service_name 
+   */
+cout<<"Creating the connection"<<endl;
+  user = "infodba"; 
+  passwd = "infodba"; 
+  db = "IZCHND045-PC:1521/TC11";
+
+  env = Environment::createEnvironment(Environment::DEFAULT);
+
+  try 
+  { 
+    con = env->createConnection(user, passwd, db); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage();
+
+    exit(EXIT_FAILURE); 
+  } 
+}
+//Defining Destructor
+Emp::~Emp() 
+{ 
+	cout<<"Terminating the connection"<<endl;
+	env->terminateConnection (con);
+
+  Environment::terminateEnvironment (env); 
+}
+
+void Emp::List()
+{
+	cout<<"Creating Statement for Procedure Call" <<endl;
+	Statement *stmt = con->createStatement("BEGIN printtableinfo(:1, :2, :3); END;"); 
+	stmt->setInt(1, 150);
+	stmt->setInt(2, 150);
+	stmt->registerOutParam (3, OCCIINT, 30, "");
+	int updateCount = stmt->executeUpdate ();
+	cout<<"Execute Update Count"<< updateCount<<endl;
+
+	int c1 = stmt->getInt(3);
+
+	cout<<"Printing here :" <<c1<<endl;
+	con->terminateStatement(stmt);
+	
+}

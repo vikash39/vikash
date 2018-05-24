@@ -1,0 +1,217 @@
+// By cursour fetching data from oracle
+
+=================================================================
+Class name :- EMP.h
+
+/* 
+* A simple OCCI test application 
+* This file contains the Employees class declaration 
+*/
+
+#include <occi.h> 
+#include <iostream> 
+#include <iomanip>
+
+using namespace oracle::occi; 
+using namespace std;
+
+class Emp { 
+public: 
+  Emp(); 
+  virtual ~Emp();
+
+  void List();
+
+private: 
+  Environment *env; 
+  Connection  *con;
+
+  string user; 
+  string passwd; 
+  string db; 
+};
+
+
+
+
+====================================================================================================================
+
+Class Name :- EMP.cpp
+=====================
+
+#include "CallProcedure.h"
+#include<stdio.h>
+#include <conio.h>
+int main()
+{
+
+	cout<<"printing the name"<<endl;
+
+	Emp *empObject = new Emp;
+
+	empObject->List();
+
+
+	getch();
+
+	return 0;
+}
+//Employee Constructor
+Emp::Emp() 
+{ 
+  /* 
+   * connect to the test database as the HR 
+   * sample user and use the EZCONNECT method 
+   * of specifying the connect string. Be sure 
+   * to adjust for your environment! The format 
+   * of the string is host:port/service_name 
+   */
+cout<<"Creating the connection"<<endl;
+  user = "infodba"; 
+  passwd = "infodba"; 
+  db = "IZCHND045-PC:1521/TC11";
+
+  env = Environment::createEnvironment(Environment::DEFAULT);
+
+  try 
+  { 
+    con = env->createConnection(user, passwd, db); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage();
+
+    exit(EXIT_FAILURE); 
+  } 
+}
+//Defining Destructor
+Emp::~Emp() 
+{ 
+	cout<<"Terminating the connection"<<endl;
+	env->terminateConnection (con);
+
+  Environment::terminateEnvironment (env); 
+}
+
+void Emp::List()
+{
+	cout<<"Creating Statement for Procedure Call" <<endl;
+	Statement *stmt = con->createStatement("BEGIN test(:1, :2); END;"); 
+
+	stmt->setString(1, "101");
+
+	stmt->registerOutParam (2, OCCICURSOR, 30, "");
+	cout<<"Test1" <<endl;
+   //cout << "\nExecuting the block :" << stmt->getSQL() << endl; 
+   stmt->executeUpdate();
+   //cout<<"Number: " <<(int)stmt->getNumber(2)<<endl;
+   cout<<"Test2" <<endl;
+  ResultSet *rs = stmt->getCursor(2);
+
+	if (rs) 
+    { 
+      cout << endl << setw(8) << left << "ID" 
+           << setw(22) << left << "FIRST NAME" 
+           << setw(27) << left << "LAST NAME" 
+		   << setw(32) << left << "MOBILE NO" 
+           << endl; 
+      cout << setw(8) << left << "======" 
+           << setw(22) << left << "====================" 
+           << setw(27) << left << "======================" 
+		   << setw(32) << left << "=========================="
+           << endl;
+
+      while (rs->next()) { 
+        cout << setw(8) << left << rs->getString(1) 
+             << setw(22) << left << (rs->isNull(2) ? "n/a" : rs->getString(2)) 
+             << setw(27) << left << rs->getString(3) 
+			 << setw(32) << left << rs->getString(4)
+             << endl; 
+      }
+
+      cout << endl;
+
+     stmt->closeResultSet(rs); 
+    }
+
+
+   
+   /*
+   
+	stmt->setInt(1, 150);
+	stmt->setInt(2, 150);
+	stmt->registerOutParam (3, OCCIINT, 30, "");
+	int updateCount = stmt->executeUpdate ();
+	cout<<"Execute Update Count"<< updateCount<<endl;
+
+	int c1 = stmt->getInt(3);
+	*/
+	//cout<<"Printing here :" <<c1<<endl;
+	con->terminateStatement(stmt);
+	
+}
+
+
+
+
+================================================================================================================
+
+Cursour :- Cursour name :- Test (procedure name)
+-------------------------------
+
+create or replace 
+procedure test( empid IN varchar2,c_dbuser OUT SYS_REFCURSOR) as
+
+fname varchar2(20);
+lname varchar2(20);
+mobile varchar2(12);
+
+begin
+  OPEN c_dbuser FOR
+  SELECT * FROM mytable;
+  
+  -- first_name into fname FROM mytable where emp_id = '101';
+  --c_dbuser := 125;
+  
+end;
+
+
+==========================================================================================================================
+
+3. Calls from PL/SQL
+Get the returned ref cursor and navigate the records like this : (no need, only run in QSL Developer for printing output by cursour)
+----------------------------------------------------------------
+
+/* Run in new window this code in SQL Developer */
+
+
+
+DECLARE 
+  c_dbuser1 SYS_REFCURSOR;
+  temp_dbuser mytable%ROWTYPE;
+BEGIN
+ 
+  --records are assign to cursor 'c_dbuser'
+  test('',c_dbuser1);
+ 
+  LOOP
+ 
+        --fetch cursor 'c_dbuser' into dbuser table type 'temp_dbuser'
+	FETCH c_dbuser1 INTO temp_dbuser;
+ 
+        --exit if no more records
+        EXIT WHEN c_dbuser1%NOTFOUND;
+
+        --print the matched username
+        dbms_output.put_line(temp_dbuser.FIRST_NAME);
+        dbms_output.put_line(temp_dbuser.mobile_no);
+ 
+  END LOOP;
+ 
+  CLOSE c_dbuser1;
+ 
+END;
+/
+
+
+
