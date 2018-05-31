@@ -1,0 +1,59 @@
+#Handler Example :- Project Name:- TCProjectDll
+File Name :- FirstDLL.c
+
+
+#include<ict/ict_userservice.h>
+#include<tc/tc_startup.h>
+#include<tccore\custom.h>
+#include<epm\epm.h>
+
+// ALL INCLUDES
+int AC_Action_Handler (EPM_action_message_t msg);
+//int AC_Rule_Handler (EPM_rule_message_t msg);
+int AC_MSE_register_custom_actions( int *decision , va_list args);
+
+extern DLLAPI int TCProjectDll_register_callbacks()
+{
+     TC_write_syslog("LOADING ARMSEDW DLL.V");
+	 printf("loading Custome .dll ");
+	 CUSTOM_register_exit("TCProjectDll", "USER_init_module", (CUSTOM_EXIT_ftn_t)AC_MSE_register_custom_actions);
+	 //CUSTOM_register_exit ("libarmsedw", "USERSERVICE_register_methods", (CUSTOM_EXIT_ftn_t)AC_MSE_Register_ServerExits);
+	 TC_write_syslog("\n libarmsedw Custom DLL --WINDOWS--\n");
+	 return ( ITK_ok );
+}
+
+int AC_MSE_register_custom_actions( int *decision , va_list args)
+{
+	int retcode = ITK_ok;
+
+	TC_write_syslog("In Register Custom actions");
+
+	retcode = EPM_register_action_handler (
+							"AC_Action_Handler11",
+							"AC_Action_Handler desc",
+							 AC_Action_Handler
+							);
+/*	retcode = EPM_register_rule_handler (
+							"AC_Rule_Handler",
+							"AC_Rule_Handler",
+							 AC_Rule_Handler
+							); */
+	
+	*decision  = ALL_CUSTOMIZATIONS;
+	args = NULL;
+	return retcode;
+}
+
+EPM_decision_t AC_Rule_Handler (EPM_rule_message_t msg)
+{
+	
+	
+	
+	
+	return EPM_go;
+}
+
+int AC_Action_Handler (EPM_action_message_t msg)
+{
+	return ITK_ok;
+}
