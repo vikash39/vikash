@@ -1,0 +1,104 @@
+File Name :- GetLatestModificationUpd.cpp
+
+
+#include<tc\tc.h>
+#include<iostream>
+#include<tccore\grm.h>
+#include<tc\tc_startup.h>
+#include<tccore\item.h>
+#include<tccore\aom_prop.h>
+#include<tccore\aom.h>
+#include<sa\group.h>
+#include<fclasses\tc_date.h>
+#include<sa\groupmember.h>
+#include<vector>
+#include<string>
+
+
+using namespace std;
+
+int ITK_user_main(int argc, char* args[]){
+
+	vector<string> temp;
+
+
+
+	int iStatus         = ITK_ok;
+	int count_list_Obj  = NULL;
+	char* volume_name   = NULL;
+	char* date_str      = NULL;
+	char* groupFullName = NULL;
+
+	tag_t relation_tag      = NULLTAG;
+	tag_t item_tag          = NULLTAG;
+	tag_t rev_tag           = NULLTAG;
+	tag_t* dataSet_tag      = NULLTAG;
+	tag_t group_tag         = NULLTAG;
+	tag_t cur_grpmember_tag = NULLTAG;
+	tag_t grup_tag          = NULLTAG;
+	date_t modified_date;
+	
+	
+
+
+
+	char* userName = ITK_ask_cli_argument("-u=");
+	char* password = ITK_ask_cli_argument("-p=");
+	char* group    = ITK_ask_cli_argument("-g=");
+
+	cout<<"above one  "<<iStatus<<endl;
+	iStatus = ITK_init_module(userName, password, group);
+	cout<<"after login "<<iStatus<<endl;
+	iStatus = ITEM_find_item("000585", &item_tag);
+	iStatus = ITEM_find_rev("000585", "A", &rev_tag);
+
+	iStatus = GRM_find_relation_type("IMAN_specification",&relation_tag);
+
+	iStatus = GRM_list_secondary_objects_only(rev_tag, relation_tag, &count_list_Obj, &dataSet_tag);
+
+	for( int i=0; i<count_list_Obj;i++){
+			if(dataSet_tag != NULL){
+
+				
+				iStatus = AOM_ask_modified_date(dataSet_tag[i],&modified_date); 
+
+				iStatus = DATE_date_to_string(modified_date,"%d-%b-%y %H:%M",&date_str);
+
+				temp.push_back(date_str);
+
+				cout<<"modified_date "<<date_str<<endl;
+
+				//iStatus = SA_find_group("dba",&group_tag);
+
+				//iStatus = SA_ask_group_volume_name2(group_tag, &volume_name);
+
+				//cout<<"Volume name = "<<volume_name<<endl;
+
+				iStatus = SA_ask_current_groupmember(&cur_grpmember_tag);		
+				iStatus = SA_ask_groupmember_group(cur_grpmember_tag, &grup_tag);
+				iStatus = SA_ask_group_full_name(grup_tag, &groupFullName);
+
+			    iStatus = SA_find_group(groupFullName,&group_tag);
+
+				iStatus = SA_ask_group_volume_name2(group_tag, &volume_name);
+
+				cout<<"Volume name = "<<volume_name<<endl;
+
+				temp.push_back(volume_name);
+
+
+				
+
+			}
+	}
+
+
+	for (int i=0; i< temp.size(); i++){ 
+
+		cout<<"Vector Print "<<temp[i]<<endl;
+	}
+
+
+
+	return iStatus;
+}
