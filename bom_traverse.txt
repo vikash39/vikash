@@ -1,0 +1,76 @@
+#include<tc\tc.h>
+#include<iostream>
+#include<bom\bom.h>
+#include<bom\bom_attr.h>
+#include<bom\bom_tokens.h>
+#include<bom\bom_errors.h>
+#include<bom\bom_msg.h>
+#include<cfm\cfm.h>
+int Bom_Traverse(tag_t children_tag);
+
+using namespace std;
+int iStatus=ITK_ok;
+int ITK_user_main(int charc,char **argv){
+
+	
+	int rev_id,rev_name,no_of_child;
+	char *att_rev_id,*att_rev_name;
+	tag_t window=NULLTAG;
+	tag_t rule_tag=NULLTAG;
+	tag_t item_tag=NULLTAG;
+	tag_t item_rev_tag=NULLTAG;
+	tag_t bom_top_line=NULLTAG;
+	tag_t *children_tag=NULLTAG;
+	char* user_id    = ITK_ask_cli_argument("-u=");
+    char* user_pwd   = ITK_ask_cli_argument("-p=");
+	char* user_grp   = ITK_ask_cli_argument("-g=");
+	iStatus=ITK_init_module(user_id,user_pwd,user_grp);
+
+	iStatus=BOM_create_window(&window);
+	iStatus=CFM_find("latest_working",&rule_tag);
+	iStatus=BOM_set_window_config_rule(window,rule_tag);
+	iStatus=ITEM_find_item("001349",&item_tag);
+	iStatus=ITEM_ask_latest_rev(item_tag,&item_rev_tag);
+	iStatus=BOM_set_window_top_line(window,item_tag,item_rev_tag,NULLTAG,&bom_top_line);
+	iStatus=BOM_line_ask_all_child_lines(bom_top_line,&no_of_child,&children_tag);
+	iStatus=BOM_line_look_up_attribute("bl_item_item_id",&rev_id);
+		iStatus=BOM_line_ask_attribute_string(bom_top_line,rev_id,&att_rev_id);
+		cout<<att_rev_id<<endl;
+		iStatus=BOM_line_look_up_attribute("bl_rev_object_name",&rev_name);
+		iStatus=BOM_line_ask_attribute_string(bom_top_line,rev_name,&att_rev_name);
+		cout<<att_rev_name<<endl;
+	if(no_of_child!=0)
+	{
+		for(int i=0;i<no_of_child;i++)
+		{
+			Bom_Traverse(children_tag[i]);
+		}
+	}
+
+	return iStatus;
+}
+int Bom_Traverse(tag_t children_tag)
+	{
+
+		int rev_id,rev_name,item_name,no_of_sub_child;
+	    char *att_rev_id,*att_rev_name,*att_item_name;
+		tag_t* child_tag=NULLTAG;
+		iStatus=BOM_line_look_up_attribute("bl_item_item_id",&rev_id);
+		iStatus=BOM_line_ask_attribute_string(children_tag,rev_id,&att_rev_id);
+		cout<<att_rev_id<<endl;
+		iStatus=BOM_line_look_up_attribute("bl_rev_object_name",&rev_name);
+		iStatus=BOM_line_ask_attribute_string(children_tag,rev_name,&att_rev_name);
+		cout<<att_rev_name<<endl;
+		
+		
+	    iStatus=BOM_line_ask_all_child_lines(children_tag,&no_of_sub_child,&child_tag);
+	    if(no_of_sub_child!=0)
+	    {
+		    for(int i=0;i<no_of_sub_child;i++)
+		    {
+	               Bom_Traverse(child_tag[i]);
+		    }
+	    }
+
+			return iStatus;
+	}

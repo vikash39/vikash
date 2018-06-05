@@ -1,0 +1,272 @@
+# Insert data in database through procedure 
+===========================================
+Procedure :- Procedure Name :- insertvaluesintable 
+
+create or replace 
+procedure insertvaluesintable 
+(
+  volume in varchar2  
+, last_modified in varchar2  
+) IS 
+
+--p_volume nameref.volume%TYPE; 
+--p_modified nameref.last_modified%TYPE;  
+    
+
+begin
+  dbms_output.put_line('Volume: '||volume); 
+  dbms_output.put_line('last_modified: '||last_modified); 
+  
+  INSERT into nameref (volume, last_modified)
+  values (volume, last_modified);
+  commit;  
+
+  --null;
+end insertvaluesintable;
+
+
+#========================================
+Usefull oracle command :-
+
+execute insertvaluesintable('volume','01-Jun-18 16:17');
+select * from nameref
+delete from nameref;
+commit;
+
+
+#===========================================
+
+#Header file :-EmpConn.h
+
+========================================
+
+
+/* 
+* A simple OCCI test application 
+* This file contains the Employees class declaration 
+*/
+#ifndef EMPCONN_H
+#define EMPCONN_H
+#endif 
+#include <occi.h> 
+#include <iostream> 
+#include <iomanip>
+
+using namespace oracle::occi; 
+using namespace std;
+
+class Emp { 
+public: 
+  Emp(); 
+  virtual ~Emp();
+
+  void List();
+
+private: 
+  Environment *env; 
+  Connection  *con;
+
+  string user; 
+  string passwd; 
+  string db; 
+};
+
+
+
+#====================================================================
+
+CPP file name :- GetLatestModificationUpd.cpp
+#===================================================================
+
+
+
+
+
+//#include "DBConnection.cpp"
+#include "EmpConn.h"
+
+#include<tc\tc.h>
+#include<iostream>
+#include<tccore\grm.h>
+#include<tc\tc_startup.h>
+#include<tccore\item.h>
+#include<tccore\aom_prop.h>
+#include<tccore\aom.h>
+#include<sa\group.h>
+#include<fclasses\tc_date.h>
+#include<sa\groupmember.h>
+#include<vector>
+#include<string>
+
+
+using namespace std;
+
+vector<string> temp;
+
+int ITK_user_main(int argc, char* args[]){
+
+	
+
+
+
+	int iStatus         = ITK_ok;
+	int count_list_Obj  = NULL;
+	char* volume_name   = NULL;
+	char* date_str      = NULL;
+	char* groupFullName = NULL;
+
+	tag_t relation_tag      = NULLTAG;
+	tag_t item_tag          = NULLTAG;
+	tag_t rev_tag           = NULLTAG;
+	tag_t* dataSet_tag      = NULLTAG;
+	tag_t group_tag         = NULLTAG;
+	tag_t cur_grpmember_tag = NULLTAG;
+	tag_t grup_tag          = NULLTAG;
+	date_t modified_date;
+	
+	
+
+
+
+	char* userName = ITK_ask_cli_argument("-u=");
+	char* password = ITK_ask_cli_argument("-p=");
+	char* group    = ITK_ask_cli_argument("-g=");
+
+	cout<<"above one  "<<iStatus<<endl;
+	iStatus = ITK_init_module(userName, password, group);
+	cout<<"after login "<<iStatus<<endl;
+	iStatus = ITEM_find_item("000585", &item_tag);
+	iStatus = ITEM_find_rev("000585", "A", &rev_tag);
+
+	iStatus = GRM_find_relation_type("IMAN_specification",&relation_tag);
+
+	iStatus = GRM_list_secondary_objects_only(rev_tag, relation_tag, &count_list_Obj, &dataSet_tag);
+
+	for( int i=0; i<count_list_Obj;i++){
+			if(dataSet_tag != NULL){
+
+
+				iStatus = SA_ask_current_groupmember(&cur_grpmember_tag);		
+				iStatus = SA_ask_groupmember_group(cur_grpmember_tag, &grup_tag);
+				iStatus = SA_ask_group_full_name(grup_tag, &groupFullName);
+
+			    iStatus = SA_find_group(groupFullName,&group_tag);
+
+				iStatus = SA_ask_group_volume_name2(group_tag, &volume_name);
+
+				cout<<"Volume name = "<<volume_name<<endl;
+
+				temp.push_back(volume_name);
+
+
+
+				iStatus = AOM_ask_modified_date(dataSet_tag[i],&modified_date); 
+
+				iStatus = DATE_date_to_string(modified_date,"%d-%b-%y %H:%M",&date_str);
+
+				temp.push_back(date_str);
+
+				cout<<"modified_date "<<date_str<<endl;
+
+
+				
+
+			}
+	}
+
+
+	for (int i=0; i< temp.size(); i++){ 
+
+		cout<<"Vector Print "<<temp[i]<<endl;
+	}
+
+
+	// DB Connection 
+
+
+	Emp *empObject = new Emp;
+
+	empObject->List();
+
+
+
+
+
+
+	return iStatus;
+}
+
+//----------------------------------------------------------
+
+Emp::Emp() 
+{ 
+  /* 
+   * connect to the test database as the HR 
+   * sample user and use the EZCONNECT method 
+   * of specifying the connect string. Be sure 
+   * to adjust for your environment! The format 
+   * of the string is host:port/service_name 
+   */
+cout<<"Creating the connection"<<endl;
+  user = "infodba"; 
+  passwd = "infodba"; 
+  db = "IZCHND045-PC:1521/TC11";
+
+  env = Environment::createEnvironment(Environment::DEFAULT);
+
+  try 
+  { 
+    con = env->createConnection(user, passwd, db); 
+  } 
+  catch (SQLException& ex) 
+  { 
+    cout << ex.getMessage();
+
+    exit(EXIT_FAILURE); 
+  } 
+}
+//Defining Destructor
+Emp::~Emp() 
+{ 
+	cout<<"Terminating the connection"<<endl;
+	env->terminateConnection (con);
+
+  Environment::terminateEnvironment (env); 
+}
+
+ 
+
+void Emp::List()
+{
+	for (int i=0; i< temp.size(); i++){ 
+
+	cout<<"Creating Statement for Procedure Call" <<endl;
+	Statement *stmt = con->createStatement("BEGIN insertvaluesintable(:1, :2); END;"); 
+
+	
+		cout<<"count size "<<temp.size()<<endl;
+		cout<<"Vector Print "<<temp[i]<<endl;
+		stmt->setString(1, temp[i]);
+	    stmt->setString(2, temp[++i]);
+	
+
+
+	//stmt->setString(1, "101");
+	//stmt->setString(2, "102");
+
+	//stmt->registerOutParam (2, OCCICURSOR, 30, "");
+	cout<<"Test1" <<endl;
+   //cout << "\nExecuting the block :" << stmt->getSQL() << endl; 
+   stmt->executeUpdate();
+   //cout<<"Number: " <<(int)stmt->getNumber(2)<<endl;
+   cout<<"Test2" <<endl;
+
+	con->terminateStatement(stmt);
+	}
+}
+
+
+
+
+
+

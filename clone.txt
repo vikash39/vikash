@@ -1,0 +1,1283 @@
+/*=======================================================================================================================
+
+                    Copyright (c) 2015  Hussmann Corporation
+                       Unpublished - All rights reserved
+
+=========================================================================================================================
+
+File :    
+
+Description : 
+=========================================================================================================================
+$HISTORY
+Date           Name						Description of Change
+
+1-Mar-2018    INZ                        Initial version
+19-Mar-2018   INZ                        Modified to update Table No and Table Name
+20-Mar-2018   INZ                        Modified Revsion ID
+=========================================================================================================================*/
+
+#include<Homolgation_Project_Clone.h>
+#include<Logger.h>
+using namespace LOG;
+using namespace std;
+
+const string timeStamp = LOG::current_timestamp(DATE_YMD_CONSTANT);
+
+int ITK_user_main(int argc, char* argv[])
+{   
+	/* Decclaration of Variables */
+		int irows		= 0,
+			icols		= 0,
+			iEntryCnt	= 0,
+			iNoFound	= 0,
+			result		= 0;
+
+	tag_t	t_item		= NULLTAG,  //It holds the object
+			t_window	= NULLTAG,
+			top_line	= NULLTAG,
+			t_new_rev	= NULLTAG,
+			t_bv		= NULLTAG,
+			view_type	= NULLTAG,
+			tQueryTag	= NULLTAG,
+			*tResults	= {NULLTAG},
+			rule		= NULLTAG;
+
+	char *user          = NULL,
+		 *pwd           = NULL,
+		 *grp           = NULL,
+		 *mailpath      = NULL,
+		 *chngUsrID		= NULL,
+		 *chngUsrGrp	= NULL,
+		 **SArryEntries = NULL,
+		 **SArryValues  = NULL,
+		 **sEntries     = NULL,
+		 **sValues      = NULL,
+		 *sTempEntries  = NULL,
+		 *sTempValues   = NULL,
+		 *objectType	= NULL,
+		 tab[30]		= "",
+	     *logpath       = NULL;
+	
+	ostringstream log;
+	log.str("");
+	const char ** pcSelects     = NULL;
+	//const char ** pcSelectsVals = NULL;
+
+	void *** pvQueryResults;
+
+	std::vector<string> vecItemInfo,
+						vecTxtContent;
+
+	std::vector<tag_t> vecItemTag;
+	
+	/*------DISPLAY HELP--------*/
+	 if ( ITK_ask_cli_argument("-help") || ITK_ask_cli_argument("-h") )
+    {
+        display_help();
+        return result;
+    }
+	 
+	/*Get Utility Argument */
+	user = ITK_ask_cli_argument("-u=");
+	pwd  = ITK_ask_cli_argument("-p=");
+    grp  = ITK_ask_cli_argument("-g=");
+	//chngUsr = ITK_ask_cli_argument("-cu=");
+	chngUsrGrp = ITK_ask_cli_argument("-cg=");
+	logpath = ITK_ask_cli_argument("-log=");
+	mailpath = ITK_ask_cli_argument("-mail=");
+	std::string path = logpath;
+	get_the_user_path(path);
+	std::string mail_path = mailpath;
+	//objectType = ITK_ask_cli_argument( "-objecttype=" );	
+	if(user == NULL ||pwd == NULL || grp == NULL || chngUsrGrp == NULL){
+		cout <<"-------------------- [ Utility usage is in correct ] ---------------- "<<endl <<endl;
+		display_help();
+		return result ;
+	}
+		
+	    if(ITK_init_module(user,pwd,grp) == ITK_ok)
+	    {
+				/* Logging Utility Arguments */
+			log.str("");
+			log << "Project Creation Starts";
+			LOG_INFO(log);
+
+			log.str("");
+			log << "SuccessFully logged !!!";
+			LOG_INFO(log);
+
+			result = ITK_set_bypass(true);
+			
+			pcSelects = ( const char** ) MEM_alloc( 1 * sizeof( char* ) ) ;
+		    pcSelects[ 0 ] = MEM_string_copy( "PUID" ) ;
+
+		    	//Set the above bom view as the top line.
+			
+		    result = QRY_find("General...",&tQueryTag);
+		    result = QRY_find_user_entries(tQueryTag,&iEntryCnt,&SArryEntries,&SArryValues);
+		 
+		    sEntries = (char **) malloc(sizeof(2));
+		    sEntries[0] = (char*) malloc(sizeof(char*));
+		    sEntries[0] = SArryEntries[2];
+		   
+		    sValues = (char **) malloc(sizeof(2));
+		    sValues[0] = (char*) malloc(sizeof(char*));
+		    sValues[0] = "Homologation Project Form";
+		    
+		    result = QRY_execute(tQueryTag,1,sEntries,sValues,&iNoFound,&tResults);
+
+			log.str("");
+			log << "Project Form Search Query executed and found : " << iNoFound <<endl;
+			LOG_INFO(log);
+
+		    for(int i=0;i<iNoFound;i++)
+		    { 
+				/* read values from form and map vector values and update projects. */
+			    char *sStatus =  NULL,
+					*sSource = NULL;
+				int	iRetCode = 0;
+			    std::vector<string> sMap;
+			    AOM_ask_value_string(tResults[i],"m2_Status",&sStatus);
+
+				AOM_ask_value_string(tResults[i],"m2_SourceType",&sSource);
+
+
+			    if(tc_strlen(sStatus)==0 && tc_strcasecmp(sSource,"Project")==0)
+			    {
+					log.str("");
+					log << "Project Form with Status Empty " <<endl;
+					LOG_INFO(log);
+
+					if(tResults[i]){
+						result = AOM_refresh(tResults[i],true);				
+						result = AOM_set_value_string(tResults[i],"m2_Status","In-Progress");
+						result = AOM_save(tResults[i]);
+						result = AOM_refresh(tResults[i],false);
+					}
+
+					log.str("");
+					log << "Project Form with Status updated to 'In-Progress' " <<endl;
+					LOG_INFO(log);
+
+					sMap = GetFormDetails(tResults[i]);	
+					map<string,tag_t> cloneDetailMAP;
+					
+					std::string RootName("");	
+	
+					RootName.assign(sMap[1].c_str());
+		            RootName.append("_");
+					RootName.append(sMap[4].c_str());
+
+					log.str("");
+					log << "Fetched Form Details of : "<< sMap[0] <<endl;
+					LOG_INFO(log);
+
+					result = ITEM_find_item("HLT_Root", &t_item);	    
+		            result = ITEM_ask_latest_rev(t_item, &t_new_rev);								//Get latest revision tag of the item
+		            result = PS_find_view_type("view", &view_type);									//Get tag of particular BOM VIEW TYPE
+		            result = ITEM_rev_ask_gde_bvr(t_new_rev, view_type, &t_bv);						//Get BOM view of above type for the latest revision of the item
+
+		          result = BOM_create_window(&t_window);	
+			      result = CFM_find("Latest Released",&rule);
+			      result = BOM_set_window_config_rule(t_window,rule);
+			//Create a new PSE window.
+		          result = BOM_set_window_top_line(t_window, t_item, NULLTAG, t_bv, &top_line);
+
+					result = getProjectNeedToCloned(top_line,sMap,cloneDetailMAP);
+
+					result = BOM_close_window(t_window);
+					if(cloneDetailMAP.size() > 0)
+					{
+						map<string,tag_t>::iterator itRoot = cloneDetailMAP.find("ROOT");
+						tag_t revTag = itRoot->second;
+
+						if(revTag == NULLTAG)
+							cout<<"Root itEM IS NULL :"<<endl;
+
+						char* sRootItemID = NULL;
+						AOM_ask_value_string(revTag,"item_id",&sRootItemID);
+						string str=sRootItemID;
+						cout<<"sRootItemID :"<<str<<endl;
+
+						tag_t tProjectItem = NULLTAG;
+						result = ITEM_ask_item_of_rev(revTag, &tProjectItem);
+
+						tag_t tCloneRootTag = NULLTAG;
+						//Get latest revision tag of the item
+						result = PS_find_view_type("view", &view_type);									//Get tag of particular BOM VIEW TYPE
+						result = ITEM_rev_ask_gde_bvr(revTag, view_type, &t_bv);						//Get BOM view of above type for the latest revision of the item
+
+						result = BOM_create_window(&t_window);	
+						result = CFM_find("Latest Working",&rule);
+						result = BOM_set_window_config_rule(t_window,rule);
+						//Create a new PSE window.
+						result = BOM_set_window_top_line(t_window, tProjectItem, revTag, t_bv, &top_line);
+
+						//Create ROOT
+						iRetCode = list(top_line,NULLTAG,sMap,&vecTxtContent,&vecItemTag,&tCloneRootTag);
+
+						result = BOM_save_window(t_window);
+						result = BOM_close_window(t_window);
+						cloneDetailMAP.erase("ROOT");
+
+						map<string,tag_t>::iterator itr = cloneDetailMAP.begin();
+						
+						while(itr != cloneDetailMAP.end()){
+							tag_t revTableTag = NULLTAG;
+							
+							revTableTag = itr->second;
+
+							result = PS_find_view_type("view", &view_type);									//Get tag of particular BOM VIEW TYPE
+							result = ITEM_rev_ask_gde_bvr(revTableTag, view_type, &t_bv);						//Get BOM view of above type for the latest revision of the item
+
+							char *item_id = NULL;
+							tag_t tTableItem = NULLTAG;
+							result = ITEM_ask_item_of_rev(revTableTag, &tTableItem);
+							result=AOM_ask_value_string(tTableItem,"item_id",&item_id);
+							result = BOM_create_window(&t_window);	
+							result = CFM_find("Latest Working",&rule);
+							result = BOM_set_window_config_rule(t_window,rule);
+							//Create a new PSE window.
+							result = BOM_set_window_top_line(t_window, tTableItem, revTableTag, t_bv, &top_line);
+
+							//Create Child
+							iRetCode = list(top_line,tCloneRootTag,sMap,&vecTxtContent,&vecItemTag,NULLTAG);
+
+							result = BOM_save_window(t_window);
+							result = BOM_close_window(t_window);
+
+							itr ++;
+						}
+
+						//Add ROOT to Project
+						{
+							tag_t tchildBOMLine = NULLTAG;
+							tag_t tItemTag = NULLTAG;
+
+							result = ITEM_find_item(sMap.at(1).c_str(), &t_item);	    
+							result = ITEM_ask_latest_rev(t_item, &t_new_rev);
+							result = PS_find_view_type("view", &view_type);										//Get tag of particular BOM VIEW TYPE
+							result = ITEM_rev_ask_gde_bvr(t_new_rev, view_type, &t_bv);						//Get BOM view of above type for the latest revision of the item
+							printf("root");
+							result = BOM_create_window(&t_window);	
+							result = CFM_find("Latest Working",&rule);
+							result = BOM_set_window_config_rule(t_window,rule);
+							//Create a new PSE window.
+							result = BOM_set_window_top_line(t_window, t_item, t_new_rev, t_bv, &top_line);
+
+							result = ITEM_ask_item_of_rev(tCloneRootTag,&tItemTag);
+							result = BOM_line_add(top_line,tItemTag,tCloneRootTag,NULLTAG,&tchildBOMLine);
+
+							result = BOM_save_window(t_window);
+							result = BOM_close_window(t_window);
+						}
+					}
+				    sMap.clear();
+		            
+					
+					/* Create Project txt file and attach to ROOT under IMANspecification relation */
+					log.str("");
+					log << "Creation Project text dataset starts"<<endl;
+					LOG_INFO(log);
+					result = add_txt_dataset(RootName,vecTxtContent);
+					vecTxtContent.clear();
+					result = AOM_ask_value_string(tResults[i],"m2_Requestor",&chngUsrID);
+					//string chngUsrID(chngUsr);
+					string chngUsrGrp(chngUsrGrp);
+
+					/* Change Ownership to all the New Part Created Now */
+					log.str("");
+					log << "Changing Ownership starts"<<endl;
+					LOG_INFO(log);
+
+					result = change_ownership(vecItemTag,chngUsrID ,chngUsrGrp);
+
+					log.str("");
+					log << "Changing Ownership ends"<<endl;
+					LOG_INFO(log);
+
+                    if(iRetCode == 0)
+                    {	result = AOM_refresh(tResults[i],true);				
+						result = AOM_set_value_string(tResults[i],"m2_Status","Success");
+						result = AOM_save(tResults[i]);
+						result = AOM_refresh(tResults[i],false);
+					}
+					else
+					{
+						result = AOM_refresh(tResults[i],true);
+						result = AOM_set_value_string(tResults[i],"m2_Status","Failure");
+						result = AOM_save(tResults[i]);
+						result = AOM_refresh(tResults[i],false);
+					}
+					result = mail_write(mail_path,tResults[i]);
+			    }
+		    }
+	    }
+	
+			log.str("");
+			log << "====== Exit utitlity =====" <<endl;
+			LOG_INFO(log);
+	result = ITK_exit_module(true);
+	return result;
+}
+
+int change_ownership(vector<tag_t> vecItemTag,string chngUsrID ,string chngUsrGrp){
+
+	int result		= 0,
+		icntBv		= 0,
+		icntBvr		= 0,
+		iSecObjCnt	= 0;
+
+tag_t	tItem		= NULLTAG,
+		tuser		= NULLTAG,
+		ItemRev		= NULLTAG,
+		tuserGrp	= NULLTAG,
+		*tBvTag		= NULLTAG,
+		*tbvrTag	= NULLTAG,
+		tImanRelType= NULLTAG,
+		*tSecList	= NULLTAG;
+	
+	/*Find user & Group tag*/
+	result = SA_find_user2(chngUsrID.c_str(),&tuser);
+	result = SA_find_group(chngUsrGrp.c_str(),&tuserGrp);
+
+	if(tuser !=NULL && tuserGrp != NULL){
+		for(int i = 0 ; i < vecItemTag.size() ; i++)	
+		{
+			//Get Item Rev latest
+			result = ITEM_ask_latest_rev(vecItemTag.at(i),&ItemRev);
+
+			//Get Bom View
+			result = ITEM_list_bom_views(vecItemTag.at(i),&icntBv,&tBvTag);
+
+			//Get Bom View revision
+			result = ITEM_rev_list_bom_view_revs( ItemRev, &icntBvr, &tbvrTag);
+
+			//Get Iman_specification relation
+			result = GRM_find_relation_type("IMAN_specification",&tImanRelType);
+			result = GRM_list_secondary_objects_only(ItemRev,tImanRelType,&iSecObjCnt,&tSecList);
+		
+			/*Change Ownership*/
+			//Item Ownership change
+			result = AOM_refresh(vecItemTag.at(i),true);
+			result = AOM_set_ownership(vecItemTag.at(i),tuser,tuserGrp);
+			result = AOM_save(vecItemTag.at(i));
+			result = AOM_refresh(vecItemTag.at(i),false);
+
+			//Item revision Ownership change
+			result = AOM_refresh(ItemRev,true);
+			result = AOM_set_ownership(ItemRev,tuser,tuserGrp);
+			result = AOM_save(ItemRev);
+			result = AOM_refresh(ItemRev,false);
+
+			//BOM view Ownership change
+			for(int i=0; i<icntBv ; i++){
+				result = AOM_refresh(tBvTag[i],true);
+				result = AOM_set_ownership(tBvTag[i],tuser,tuserGrp);
+				result = AOM_save(tBvTag[i]);
+				result = AOM_refresh(tBvTag[i],false);
+			}
+
+			//BOM view revision Ownership change
+			for(int i=0; i<icntBvr ; i++){
+				
+				result = AOM_refresh(tbvrTag[i],true);
+				result = AOM_set_ownership(tbvrTag[i],tuser,tuserGrp);
+				result = AOM_save(tbvrTag[i]);
+				result = AOM_refresh(tbvrTag[i],false);
+			}
+
+			//IMAN specification Ownership change
+			for(int i=0; i<iSecObjCnt ; i++){
+				
+				result = AOM_refresh(tSecList[i],true);
+				result = AOM_set_ownership(tSecList[i],tuser,tuserGrp);
+				result = AOM_save(tSecList[i]);
+				result = AOM_refresh(tSecList[i],false);
+			}
+		}
+	}
+	return result;
+}
+int add_txt_dataset(string rootName,std::vector<string> vecTxtContent){
+	int result = 0;
+	ofstream file("C:/TEMP/projectdetails.txt");
+	ostringstream log;
+
+	
+
+	if(file.is_open()){
+		log.str("");
+		log << "File open and writing data starts"<<endl;
+		LOG_INFO(log);
+		for(int i = 0 ; i < vecTxtContent.size(); i++){
+			file << vecTxtContent.at(i) <<endl;
+		}
+		log.str("");
+		log << "File open and writing data completed "<<endl;
+		LOG_INFO(log);
+		file.flush();
+		file.close();
+	}
+
+	//create and attach dataset to Project
+	
+	tag_t tProjectItem = NULLTAG,
+			tProjectItemRev = NULLTAG,
+			tdatasetTxtType	= NULLTAG,
+			tnewTxtDataset	= NULLTAG,
+			tImanSpecRelType= NULLTAG,
+			tImanSpecRel	= NULLTAG;
+	
+	result = ITEM_find_item(rootName.c_str(),&tProjectItem);
+
+	if(tProjectItem != NULLTAG){
+		result = ITEM_ask_latest_rev(tProjectItem,&tProjectItemRev);
+		result = AE_find_datasettype2("TEXT",&tdatasetTxtType);
+		result = AE_create_dataset(tdatasetTxtType,"ProjectFile","This file contains project details",&tnewTxtDataset);
+
+		log.str("");
+		log << "Project file dataset creation success "<<endl;
+		LOG_INFO(log);
+
+		if(tnewTxtDataset){
+			tag_t		tNewFile			= NULLTAG;
+			IMF_file_t	fileDescp;
+
+			result = IMF_import_file( "C:/TEMP/projectdetails.txt", NULL, SS_TEXT, &tNewFile, &fileDescp );
+			
+			result = IMF_close_file( fileDescp );
+			
+			result = AOM_save( tNewFile );
+			
+			result = AOM_refresh( tnewTxtDataset, true );
+			
+			result = AE_add_dataset_named_ref2( tnewTxtDataset, "Text", AE_ASSOCIATION, tNewFile );
+			
+			result = AOM_save( tnewTxtDataset );
+			
+			result = AOM_refresh( tnewTxtDataset, false );
+
+			result = GRM_find_relation_type("IMAN_specification",&tImanSpecRelType);
+
+			result = GRM_create_relation(tProjectItemRev,tnewTxtDataset,tImanSpecRelType,NULLTAG,&tImanSpecRel);
+
+			result = GRM_save_relation(tImanSpecRel);	
+
+			result = AOM_refresh(tProjectItemRev,false);
+		}
+		log.str("");
+		log << "Project file dataset Attachment Success "<<endl;
+		LOG_INFO(log);
+	}
+	result = remove("C:/TEMP/projectdetails.txt");
+
+	return 0;
+}
+void Memory_free(void *what)
+{
+    if (what != NULL)
+    {
+        MEM_free(what);
+        what = NULL;
+    }
+}
+std::vector<string> GetFormDetails(tag_t tForm) 
+{
+     
+	std::vector<string> sUpdateValues; 
+	char *sRequestor     = NULL;
+	char *sDateRequested = NULL;
+	char *sProject       = NULL;
+	char *sPlatform      = NULL;
+	char *sVariants      = NULL;
+	char *sScalability   = NULL;
+	char *sSource        = NULL;
+	char *sSourceType    = NULL;
+	char *sVehicleclass  = NULL;
+	char *sFuelType      = NULL;  
+	
+
+	if(tForm!=NULLTAG)
+	{
+		AOM_ask_value_string(tForm,"m2_Requestor",&sRequestor);
+		AOM_ask_value_string(tForm,"m2_DateRequested",&sDateRequested);
+		AOM_ask_value_string(tForm,"m2_Project",&sProject);
+		AOM_ask_value_string(tForm,"m2_Platform",&sPlatform);
+		AOM_ask_value_string(tForm,"m2_Variants",&sVariants);
+		AOM_ask_value_string(tForm,"m2_Scalability",&sScalability);
+		AOM_ask_value_string(tForm,"m2_Source",&sSource);
+		AOM_ask_value_string(tForm,"m2_SourceType",&sSourceType);
+		AOM_ask_value_string(tForm,"m2_VehicleClassification",&sVehicleclass);
+		AOM_ask_value_string(tForm,"m2_FuelType",&sFuelType);
+		
+		 		 
+		sUpdateValues.push_back(sPlatform);				 //0
+		sUpdateValues.push_back(sProject);				 //1
+		sUpdateValues.push_back(sVehicleclass);			 //2
+		sUpdateValues.push_back(sFuelType);				 //3
+		sUpdateValues.push_back(sVariants);				 //4
+		sUpdateValues.push_back(sScalability);           //5
+		sUpdateValues.push_back(sSource);	             //6
+		sUpdateValues.push_back(sSourceType);            //7
+		sUpdateValues.push_back(sRequestor);			 //8
+		sUpdateValues.push_back(sDateRequested);	 	 //9
+
+	}
+
+	return sUpdateValues;
+
+}
+int	list(tag_t top_line,tag_t tRevTag,vector<std::string> vecItemInfo,vector<string> *vecTxtContent,vector<tag_t> *vecItemTag,tag_t *tRootTag)
+{
+	int		i				= 0,
+			n				= 0,
+			attr			= 0,
+			seqNo			= 0,
+			result			= 0;
+
+	char	*c_name			= NULL;
+	const char *obj_string = NULL;
+	tag_t	*t_child_boms	= NULL,
+ 	        c_name_tag		= NULLTAG,
+			rv_tag			= NULLTAG,
+			tItemTag		= NULLTAG,
+			tRevisionTag	= NULLTAG,
+			view_type		= NULLTAG,
+			tBomViewTag		= NULLTAG,
+			tBVRTag			= NULLTAG,
+			tBomViewRevisionTag = NULLTAG,
+			tOutputLine		= NULLTAG,
+			t_window		= NULLTAG,
+			new_line		= NULLTAG;
+
+	char	*tBomlineType	= NULL,
+		    *cSequenceNo	= NULL;
+	
+		
+		char *cSourceValue = NULL,
+			 *cMarketValue = NULL;
+	     
+	
+	
+	ostringstream log;
+
+	result = BOM_line_look_up_attribute("bl_revision", &attr);				//getting the attribute no. of bl_revision
+	result = BOM_line_ask_attribute_tag(top_line, attr, &rv_tag);			//getting the revision tag from the attrib no
+
+	result = BOM_line_look_up_attribute("bl_sequence_no", &seqNo);			//getting the attribute no. of bl_revision
+	result = BOM_line_ask_attribute_string(top_line, seqNo, &cSequenceNo);	//getting the revision tag from the attrib no.
+	
+	result = ITEM_ask_item_of_rev(rv_tag, &c_name_tag);						//getting the item of the revision.
+	result = WSOM_ask_name2(c_name_tag, &c_name);							//getting the name of the item.
+	result = WSOM_ask_object_type2(c_name_tag,&tBomlineType);
+	result = AOM_ask_value_string(rv_tag,"object_string",&cSourceValue);
+	if(tc_strcmp(tBomlineType,"M2_HomoProjRoot")==0)
+	{
+//		//printf("\n in temp root start");
+		char * cTemplObjDesc = NULL;
+		std::string sProjRootName("");	
+	    std::string temp("");
+		sProjRootName.assign(vecItemInfo[1].c_str());
+		sProjRootName.append("-");
+		sProjRootName.append(vecItemInfo[4].c_str());
+
+		tag_t tPlatFormItemTag = NULLTAG;
+		result = ITEM_find_item(vecItemInfo[0].c_str(),&tPlatFormItemTag);
+
+		tag_t tPlatFormRevisionTag = NULLTAG;
+		if(tPlatFormItemTag == NULLTAG){
+			//cout<<"Parent Document Name:"<<vecItemInfo[0].c_str()<<endl;
+		    result = ITEM_create_item(vecItemInfo[0].c_str(),"","M2_Platform_Proj","",&tPlatFormItemTag,&tPlatFormRevisionTag);
+			result = AOM_set_value_string(tPlatFormRevisionTag,"m2_PlatForm_Proj_Type","Platform");
+			result = AOM_save(tPlatFormItemTag);
+		    result = AOM_save(tPlatFormRevisionTag);
+			vecItemTag->push_back(tPlatFormItemTag);//ItemOwnerShipChangeVector
+
+			log.str("");
+			log << "Platform Project Created : " << vecItemInfo[0] <<endl;
+			LOG_INFO(log);
+
+		}else{
+			log.str("");
+			log << "Platform Project Found : " << vecItemInfo[0] <<endl;
+			LOG_INFO(log);
+
+			result = ITEM_ask_latest_rev(tPlatFormItemTag,&tPlatFormRevisionTag);
+		}
+
+		tag_t tBomWindow = NULLTAG;
+		tag_t tBOMTopLine = NULLTAG,
+			  RuleTag     = NULLTAG;
+		result = BOM_create_window(&tBomWindow);
+		result = CFM_find("Latest Working",&RuleTag);
+		result = BOM_set_window_config_rule(tBomWindow,RuleTag);
+		result = BOM_set_window_top_line(tBomWindow,NULLTAG,tPlatFormRevisionTag,NULLTAG,&tBOMTopLine);
+
+		int icntBv = 0;
+		tag_t* tBvTag = NULL;
+		tag_t tBomView= NULLTAG;
+		result =  ITEM_list_bom_views(tPlatFormItemTag,&icntBv,&tBvTag);
+		if(icntBv > 0){
+			tBomView = tBvTag[0];
+		}else{
+			PS_create_bom_view(NULLTAG,"","",tPlatFormItemTag,&tBomView);
+			AOM_save(tBomView);
+			AOM_save(tPlatFormItemTag);
+		}
+
+		int icntBvr = 0;
+		tag_t* tbvrTag = NULL;
+		tag_t tBomViewRevision = NULLTAG;
+		result = ITEM_rev_list_bom_view_revs( tPlatFormRevisionTag, &icntBvr, &tbvrTag);
+		if(icntBvr > 0){
+			tBomViewRevision = tbvrTag[0];
+		}
+		else{
+			PS_create_bvr(tBomView,"","", false, tPlatFormRevisionTag,&tBomViewRevision);
+			AOM_save(tBomViewRevision);
+			AOM_save(tPlatFormRevisionTag);
+		}
+
+			log.str("");
+			log << "Platform Project Bom view created : " << vecItemInfo[0] <<endl;
+			LOG_INFO(log);
+
+//-----------------------------------------Creating Project Item ---------------------
+		tag_t tProjectItem = NULLTAG;
+		result = ITEM_find_item(vecItemInfo[1].c_str(),&tProjectItem);
+
+		tag_t tProjectRevisionTag = NULLTAG;
+		if(tProjectItem == NULLTAG){
+		    result = ITEM_create_item(vecItemInfo[1].c_str(),"","M2_Platform_Proj","",&tProjectItem,&tProjectRevisionTag);
+			result = AOM_set_value_string(tProjectRevisionTag,"m2_PlatForm_Proj_Type","Project");
+			result = AOM_save(tProjectItem);
+		    result = AOM_save(tProjectRevisionTag);
+			vecItemTag->push_back(tProjectItem);//ItemOwnerShipChangeVector
+
+
+			log.str("");
+			log << "Project created : " << vecItemInfo[1] <<endl;
+			LOG_INFO(log);
+
+			tag_t tProjchildBOMLine = NULLTAG;
+			result = AOM_refresh(tBOMTopLine,true);
+			result = BOM_line_add(tBOMTopLine,tProjectItem,tProjectRevisionTag,NULLTAG,&tProjchildBOMLine);
+			
+			result = AOM_refresh(tBOMTopLine,true);
+			result = AOM_save(tBOMTopLine);
+			result = BOM_save_window(tBomWindow);
+			result = BOM_close_window(tBomWindow);
+		}else{
+			log.str("");
+			log << "Project found : " << vecItemInfo[1] <<endl;
+			LOG_INFO(log);
+			result = ITEM_ask_latest_rev(tProjectItem,&tProjectRevisionTag);
+		}
+		
+		tag_t tProjBomWindow = NULLTAG;
+		tag_t tProjBOMTopLine = NULLTAG,
+		      tProjRuleTag  =NULLTAG; 
+		result = BOM_create_window(&tProjBomWindow);
+		result = CFM_find("Latest Working",&tProjRuleTag);
+		result = BOM_set_window_config_rule(tProjBomWindow,tProjRuleTag);
+		result = BOM_set_window_top_line(tProjBomWindow,NULLTAG,tProjectRevisionTag,NULLTAG,&tProjBOMTopLine);
+
+		int iProjcntBv = 0;
+		tag_t* tProjBvTag = NULL;
+		tag_t tProjBomView= NULLTAG;
+		result =  ITEM_list_bom_views(tProjectItem,&iProjcntBv,&tProjBvTag);
+		if(iProjcntBv > 0){
+			tProjBomView = tProjBvTag[0];
+		}else{
+			PS_create_bom_view(NULLTAG,"","",tProjectItem,&tProjBomView);
+			AOM_save(tProjBomView);
+			AOM_save(tProjectItem);
+		}
+
+		int iProjcntBvr = 0;
+		tag_t* tProjbvrTag = NULL;
+		tag_t tProjBomViewRevision = NULLTAG;
+		result = ITEM_rev_list_bom_view_revs( tProjectRevisionTag, &iProjcntBvr, &tProjbvrTag);
+		if(iProjcntBvr > 0){
+			tProjBomViewRevision = tProjbvrTag[0];
+		}
+		else{
+			PS_create_bvr(tProjBomView,"","", false, tProjectRevisionTag,&tProjBomViewRevision);
+			AOM_save(tProjBomViewRevision);
+			AOM_save(tProjectRevisionTag);
+		}
+
+		log.str("");
+		log << "Project BOM View created : " << vecItemInfo[1] <<endl;
+		LOG_INFO(log);
+		//------------------------------ROOT---------------------------------
+		
+		result = ITEM_create_item(sProjRootName.c_str(),"","M2_HomoProjRoot","",&tItemTag,&tRevisionTag);
+		
+		result = AOM_save(tItemTag);
+		result = AOM_save(tRevisionTag);
+		vecItemTag->push_back(tItemTag);//ItemOwnerShipChangeVector
+
+		log.str("");
+		log << "Project Root created : " << sProjRootName <<endl;
+		LOG_INFO(log);
+
+		result = AOM_ask_value_string(c_name_tag,"object_desc",&cTemplObjDesc);
+
+		result = AOM_refresh(tItemTag,FALSE);
+		result = AOM_set_value_string(tItemTag,"object_desc",cTemplObjDesc);
+		result = AOM_save(tItemTag);
+		result = AOM_refresh(tItemTag,TRUE);
+
+		result = AOM_refresh(tRevisionTag,FALSE);
+		result = AOM_set_value_string(tRevisionTag,"object_desc",cTemplObjDesc);
+		result = AOM_save(tRevisionTag);
+		result = AOM_refresh(tRevisionTag,TRUE);
+
+		result = PS_find_view_type("view", &view_type);
+		result = PS_create_bom_view(view_type, "", NULL, tItemTag, &tBomViewTag);
+		result = AOM_save(tBomViewTag);
+		result = AOM_save(tItemTag);
+
+		char* pdItemID =NULL;
+		result = AOM_ask_value_string(tItemTag,"item_id",&pdItemID);
+
+		result = PS_create_bvr(tBomViewTag, "", NULL, true, tRevisionTag, &tBomViewRevisionTag);
+		result = AOM_save(tBomViewRevisionTag);
+		result = AOM_save(tRevisionTag);
+
+		result = AOM_set_value_string(tRevisionTag,"m2_Platform",vecItemInfo[0].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_Project",vecItemInfo[1].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_VehicleClassification",vecItemInfo[2].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_FuelType",vecItemInfo[3].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_Variant",vecItemInfo[4].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_Scalability",vecItemInfo[5].c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_Cloning_Source",cSourceValue);
+		result = AOM_save(tRevisionTag);
+		
+		log.str("");
+		log << "Project Root BOM view created and attribute udated : " << sProjRootName <<endl;
+		LOG_INFO(log);
+
+		log.str("");
+		log << "Project Root added parent Project " <<endl;
+		LOG_INFO(log);
+		//Add To File txt vector
+		temp.assign("Project");
+		vecTxtContent->push_back(temp.append("="));
+		*tRootTag = tRevisionTag;
+		return result ;
+	}
+	else if(tc_strcmp(tBomlineType,"M2_HomoTempTable")==0 || tc_strcmp(tBomlineType,"M2_HomoProjTable") == 0)
+	{
+		char	*pdVechClass   = NULL,
+		        *pdTableName   = NULL,
+		        *pdFuelType    = NULL,
+		        *pdChapterName = NULL,
+				*cTemplObjDesc  = NULL,
+				*sItemId       = NULL,
+				*cTableName    = NULL;
+		 
+		char	**sArryVals    = NULL;
+		
+		std::string sItemId1;
+		int iCount   = 0,
+			iBlSeqNo = 0,
+		    iLength  = 0;
+		tag_t rule = NULLTAG;
+		
+		result = AOM_ask_value_string(rv_tag,"object_name",&pdChapterName);	
+		
+		result = AOM_ask_value_string(rv_tag,"item_id",&sItemId);
+		result = EPM__parse_string(sItemId,"_",&iCount,&sArryVals);		
+		
+		sItemId1.append(vecItemInfo[1].c_str());
+		sItemId1.append("_");
+		sItemId1.append(vecItemInfo[4].c_str());
+		sItemId1.append("_");
+		sItemId1.append(sArryVals[iCount-1]);		
+		std::string szVechClass("");
+		result = AOM_ask_value_string(rv_tag,"m2_Vehicle_Classification",&pdVechClass);
+		szVechClass.assign(pdVechClass);
+		result = AOM_ask_value_string(rv_tag,"m2_MarketType",&cMarketValue);
+		result = AOM_ask_value_string(rv_tag,"object_name",&pdTableName);
+		result = AOM_ask_value_string(rv_tag,"m2_TableName",&cTableName);
+		std::string szFuelType("");
+		result = AOM_ask_value_string(rv_tag,"m2_Fuel_Type",&pdFuelType); 
+		szFuelType.assign(pdFuelType);		
+
+		    result = ITEM_create_item(sItemId1.c_str(),"","M2_HomoProjTable","",&tItemTag,&tRevisionTag);
+			
+			result = AOM_save(tItemTag);
+			result = AOM_save(tRevisionTag);
+			
+			vecItemTag->push_back(tItemTag);//ItemOwnerShipChangeVector
+			
+			log.str("");
+			log << "Project Table Created : "<< sItemId1 <<endl;
+			LOG_INFO(log);
+			
+			result = AOM_ask_value_string(c_name_tag,"object_desc",&cTemplObjDesc);
+
+			result = AOM_refresh(tItemTag,FALSE);
+			result = AOM_set_value_string(tItemTag,"object_desc",cTemplObjDesc);
+			result = AOM_save(tItemTag);
+			result = AOM_refresh(tItemTag,TRUE);
+
+		    result = AOM_refresh(tRevisionTag,TRUE);
+			result = AOM_set_value_string(tRevisionTag,"object_desc",cTemplObjDesc);
+			result = AOM_set_value_string(tRevisionTag,"m2_TableNo",sItemId1.c_str());
+			result = AOM_set_value_string(tRevisionTag,"m2_TableName",cTableName);
+			result = AOM_set_value_string(tRevisionTag,"m2_Cloning_Source",cSourceValue);
+			result = AOM_set_value_string(tRevisionTag,"m2_MarketType",cMarketValue);
+			result =AOM_set_value_string(tRevisionTag,"m2_VehicleClassification",vecItemInfo[2].c_str());
+			result =AOM_set_value_string(tRevisionTag,"m2_FuelType",vecItemInfo[3].c_str());
+			
+		
+			result = AOM_save(tRevisionTag);
+			result = AOM_refresh(tRevisionTag,FALSE);
+
+			
+
+
+			result = PS_find_view_type("view", &view_type);
+			result = PS_create_bom_view(view_type, "", NULL, tItemTag, &tBomViewTag);
+			result = AOM_save(tBomViewTag);
+			result = AOM_save(tItemTag);
+			result = PS_create_bvr(tBomViewTag, "", NULL, true, tRevisionTag, &tBomViewRevisionTag);
+			result = AOM_save(tBomViewRevisionTag);
+			result = AOM_save(tRevisionTag);
+
+			log.str("");
+			log << "Project Table BOM VIEW Created : "<< sItemId1 <<endl;
+			LOG_INFO(log);
+
+			result = ITEM_rev_ask_gde_bvr(tRevTag,view_type,&tBVRTag);
+			
+			
+			result = BOM_create_window(&t_window);
+			result = CFM_find("Latest Working",&rule);
+			result = BOM_set_window_config_rule(t_window,rule);
+			char *TableNme = NULL;
+			result =  AOM_ask_value_string(tRevisionTag,"item_id",&TableNme);
+			log.str("");
+			log << "Newly created table ID : "<< TableNme <<endl;
+			LOG_INFO(log);
+			tag_t item_id = NULLTAG;
+			string str = TableNme;
+			int pos = str.find_last_of("Table");
+			string Find_no = str.substr(pos+1,str.length());
+			
+			result = BOM_set_window_top_line(t_window,tItemTag, tRevTag, tBVRTag, &tOutputLine);
+			result = BOM_line_add( tOutputLine,tItemTag,tRevisionTag,tBVRTag, &new_line);
+			result = BOM_line_set_precise(tOutputLine, FALSE); 
+		    result = BOM_line_set_precise(new_line, FALSE); 
+			result = BOM_line_look_up_attribute("bl_sequence_no", &iBlSeqNo);
+			//BOM_line_set_attribute_string(new_line, iBlSeqNo, cSequenceNo);
+			result = BOM_line_set_attribute_string(new_line, iBlSeqNo, Find_no.c_str());
+			
+
+			log.str("");
+			log << "Project Table BOM Line added to parent and updated with seqno : "<< cSequenceNo <<endl;
+			LOG_INFO(log);
+
+			result = BOM_save_window(t_window);
+			result = BOM_close_window(t_window);
+			
+			/*Text file creation vector input build*/
+			string temp = sArryVals[iCount-1];
+			vecTxtContent->push_back(temp.append("=")); //append new Project
+
+			//Append new project in Platform
+			temp = "";
+			temp = vecTxtContent->front(); //Project=Table1,Table2....TableN
+			if( (temp.size()-1) == temp.find("=")){
+				temp =  temp + sArryVals[iCount-1];
+			}
+			else temp =  temp + "," + sArryVals[iCount-1];
+
+			vecTxtContent->front() = temp;
+			/**/
+			MEM_free(pdVechClass);
+			MEM_free(pdFuelType);
+			MEM_free(pdTableName);
+	/*	}	
+		else{
+			return 0;
+		}*/
+
+	}
+	else if(tc_strcmp(tBomlineType,"M2_HomoTempChapt") ==0 || tc_strcmp(tBomlineType,"M2_HomoProjChap") == 0 )
+	{
+		char *pdChapterName = NULL;	
+		char *sItemId = NULL,
+			 *cTemplObjDesc = NULL,
+			 *cChapterName = NULL;
+		char **sArryVals = NULL;
+		std::string sItemId1;
+		int iCount   = 0;
+		int iLength  = 0;
+		int iBlSeqNo = 0;
+		
+		result = AOM_ask_value_string(rv_tag,"object_name",&pdChapterName);
+		result = AOM_ask_value_string(rv_tag,"m2_ChapterName",&cChapterName);
+		result = AOM_ask_value_string(rv_tag,"item_id",&sItemId);
+		result = EPM__parse_string(sItemId,"_",&iCount,&sArryVals);		
+
+		char *pdResponsibledept = NULL;	
+		result = AOM_ask_value_string(rv_tag,"m2_ResponsibilityGroup",&pdResponsibledept);
+
+		char **pdRefDataValue = NULL;	
+		int iNoOfValue = 0;
+		result = AOM_ask_value_strings(rv_tag,"m2_Reference_Data",&iNoOfValue,&pdRefDataValue);
+	    result = AOM_ask_value_string(rv_tag,"m2_MarketType",&cMarketValue);
+		sItemId1.append(vecItemInfo[1].c_str());
+		sItemId1.append("_");
+		sItemId1.append(vecItemInfo[4].c_str());		
+		sItemId1.append("_");
+		sItemId1.append(sArryVals[iCount-2]);
+		sItemId1.append("_");
+		sItemId1.append(sArryVals[iCount-1]);		
+
+		tag_t tRelation = NULLTAG,rule = NULLTAG;
+		int iObjCount = 0;
+		tag_t *tDataSetTag = NULL;
+		int iTotalRef =0;
+		tag_t tNewDataset = NULL;
+		result = GRM_find_relation_type( "IMAN_specification",&tRelation );
+		result = GRM_list_secondary_objects_only( rv_tag, tRelation, &iObjCount, &tDataSetTag);
+		for(int i = 0 ; i < iObjCount ; i++){
+			AE_copy_dataset_with_id(tDataSetTag[i],sItemId1.c_str(),NULL,NULL,&tNewDataset);
+			//cout<<"Copt dataset"<<endl;
+		}
+
+		result = ITEM_create_item(sItemId1.c_str(),"","M2_HomoProjChap","",&tItemTag,&tRevisionTag);
+		
+		result = AOM_save(tItemTag);
+		result = AOM_save(tRevisionTag);
+		
+		vecItemTag->push_back(tItemTag);//ItemOwnerShipChangeVector
+		
+		log.str("");
+		log << "Project Chapter created successfully "<< sItemId1 <<endl;
+		LOG_INFO(log);
+
+
+		result = AOM_ask_value_string(c_name_tag,"object_desc",&cTemplObjDesc);
+
+		result = AOM_refresh(tItemTag,FALSE);
+		result = AOM_set_value_string(tItemTag,"object_desc",cTemplObjDesc);
+		result = AOM_save(tItemTag);
+		result = AOM_refresh(tItemTag,TRUE);
+
+		result = AOM_refresh(tRevisionTag,TRUE);
+		result = AOM_set_value_string(tRevisionTag,"m2_ChapterNo",sItemId1.c_str());
+		result = AOM_set_value_string(tRevisionTag,"m2_ChapterName",cChapterName);
+		result = AOM_set_value_string(tRevisionTag,"object_desc",cTemplObjDesc);
+		result = AOM_set_value_string(tRevisionTag,"m2_Cloning_Source",cSourceValue);
+		result = AOM_set_value_string(tRevisionTag,"m2_MarketType",cMarketValue);
+		if(pdResponsibledept != NULL) 
+			result = AOM_set_value_string(tRevisionTag,"m2_ResponsibilityGroup",pdResponsibledept);
+		if(pdRefDataValue != NULL)
+			result = AOM_set_value_strings(tRevisionTag,"m2_Reference_Data",iNoOfValue,pdRefDataValue);
+
+		log.str("");
+		log << "Project Chapter attribtues are updated successfully "<< sItemId1 <<endl;
+		LOG_INFO(log);
+
+		result = AOM_save(tRevisionTag);
+		result = AOM_refresh(tRevisionTag,FALSE);
+
+		SAFE_SM_FREE(pdRefDataValue);
+		MEM_free(pdResponsibledept);
+
+
+		tag_t tNewRelation = NULLTAG;
+		result = GRM_create_relation(tRevisionTag,tNewDataset,tRelation,NULLTAG,&tNewRelation);
+		result = GRM_save_relation(tNewRelation);
+
+		result = PS_find_view_type("view", &view_type);
+		result = PS_create_bom_view(view_type, "", NULL, tItemTag, &tBomViewTag);
+		result = AOM_save(tBomViewTag);
+		result = AOM_save(tItemTag);
+		
+		result = PS_create_bvr(tBomViewTag, "", NULL, true, tRevisionTag, &tBomViewRevisionTag);
+		result = AOM_save(tBomViewRevisionTag);
+		result = AOM_save(tRevisionTag);
+		result = ITEM_rev_ask_gde_bvr(tRevTag,view_type,&tBVRTag);
+		result = BOM_create_window(&t_window);
+		result = CFM_find("Latest Working",&rule);
+	    result = BOM_set_window_config_rule(t_window,rule);
+		result = BOM_set_window_top_line(t_window, NULLTAG, tRevTag, tBVRTag, &tOutputLine);
+		
+		//cout<<"BOM_set_window_top_line"<<result<<endl;
+		result = BOM_line_add( tOutputLine, tItemTag,tRevisionTag ,tBVRTag, &new_line);
+		result = BOM_line_set_precise(tOutputLine, FALSE); 
+		result = BOM_line_set_precise(new_line, FALSE); 
+		result = BOM_line_look_up_attribute("bl_sequence_no", &iBlSeqNo);
+		result = BOM_line_set_attribute_string(new_line, iBlSeqNo, cSequenceNo);
+		//cout<<" ItemID : ["<< sItemId1<< "] Chapter Sequence No :["<< cSequenceNo <<"] Status:["<<result<<"]"<<endl;
+		result = BOM_save_window(t_window);
+		result = BOM_close_window(t_window);
+		
+		log.str("");
+		log << "Project Chapter BOM view created added to Parent BOM and sequence no update Successfully : "<< cSequenceNo <<endl;
+		LOG_INFO(log);
+
+		/*Text file creation vector input build*/
+		string temp = vecTxtContent->back();
+		if( (temp.size()-1) == temp.find("=")){
+			temp =  temp + sArryVals[iCount-1];
+		}
+		else temp =  temp + "," + sArryVals[iCount-1];
+
+		vecTxtContent->pop_back();
+		vecTxtContent->push_back(temp);
+		/**/
+
+		MEM_free(pdChapterName);
+		SAFE_SM_FREE(tDataSetTag);
+		
+	}
+	else
+	{
+		return result;
+		}
+	
+	    result = BOM_line_ask_all_child_lines(top_line, &n, &t_child_boms);	
+        //cout<<"BOM_line_ask_all_child_lines"<<n<<"::"<<result<<endl;	//getting child bomlines of a top bomline.
+	    if (n > 0)
+	    {		
+			for(i=0;i<n;i++)
+		    {
+				//cout<<"inside for"<<i<<"::"<<result<<endl;
+				list(t_child_boms[i],tRevisionTag,vecItemInfo,vecTxtContent,vecItemTag,NULLTAG);//calling itself with the current bomline as topline and its children.
+			}
+		}
+	return	result;
+}
+void mrv_String_Tokenize( const std::string& str, std::string& delimiters, std::vector<std::string> &vecTokenised)
+{
+	//ENTER("H4_String_Tokenize");
+
+	int lastPos = 0,
+	        pos = 0;
+			
+	std::string str_orig(str);
+
+	int size    = (int) str.size(),
+	    delimSize = (int) delimiters.size();
+		
+	bool bEnter = false;
+	//if(ISDEBUG) TC_write_syslog("DEBUG INFO: delimSize=#%d#\n", delimSize);
+	while (pos > -1)
+	{
+		pos = (int)str.find_first_of(delimiters,lastPos);
+		//if(ISDEBUG) TC_write_syslog("DEBUG INFO: pos=#%d# \n", pos);
+		if (pos == -1 && bEnter == false){
+			bEnter = false;
+			break;
+		}
+		else
+			bEnter = true;
+
+		string sTemp("");
+		if ( pos != 0){
+			sTemp.assign(str.substr(lastPos,(pos-lastPos-(delimSize-1))));
+		}
+		//LOGMSG(sTemp.c_str());
+		vecTokenised.push_back(sTemp);
+		lastPos = pos + delimSize;
+		if (!bEnter){
+			//LOGMSG(str.c_str());
+			vecTokenised.push_back(str);
+		}
+	}
+
+	if ( vecTokenised.size() == 0)
+	{
+		if( str_orig.length() > 0 )
+			vecTokenised.push_back(str_orig);
+	}
+	//EXIT("H4_String_Tokenize");
+}
+void display_help(){
+	cout<<"===================================================================="<<endl;
+	cout<<"_________ Project template creation utility help________"<< endl << endl 
+		<<"<utility_exe> -u=<user_id> -p=<password> -g=<user_group> -cg=<change_owning_user_group> -log=<log_file_path>"<<endl<<endl
+		<<" -u  'Login User ID' "<<endl
+		<<" -p  'Login User's Password' "<<endl
+		<<" -g  'Login User's Group [dba]' "<<endl
+		<<" -cu  'Change ownership user id' "<<endl
+		<<" -cg  'Change ownership user's group' "<<endl
+        <<" -log  'User's Log Path' "<<endl<<endl
+		<<" E.g. Homologation-Project-Creation.exe -u=user1 -p=infodba -g=dba -cg=VI -log=C:\myfolder\ "<<endl
+		<<" Note : All arguments are mandatory"<<endl
+		<<"===================================================================="<<endl;
+}
+
+
+int getProjectNeedToCloned(tag_t top_line,vector<string>sMap,map<string,tag_t> &cloneDetailMAP){
+
+	int		chilCount		= 0,
+			result			= 0,
+			attr			= 0;
+
+	tag_t *t_child_boms		= {NULLTAG},
+			rv_tag			= NULLTAG,
+			c_name_tag		= NULLTAG;
+
+	char	*c_name			= NULL,
+			*cBomlineType	= NULL,
+			*cVechClassVal	= NULL,
+			*cFuelTypeVal	= NULL;
+
+
+
+	try{
+		result = BOM_line_ask_all_child_lines(top_line, &chilCount, &t_child_boms);
+		if(chilCount > 0 )
+		{
+			for ( int i = 0 ; i < chilCount ; i++){
+				result = BOM_line_look_up_attribute("bl_revision", &attr);				//getting the attribute no. of bl_revision
+				result = BOM_line_ask_attribute_tag(t_child_boms[i], attr, &rv_tag);			//getting the revision tag from the attrib no.
+
+				result = ITEM_ask_item_of_rev(rv_tag, &c_name_tag);						//getting the item of the revision.
+				result = WSOM_ask_name2(c_name_tag, &c_name);							//getting the name of the item.
+				result = WSOM_ask_object_type2(c_name_tag,&cBomlineType);
+
+				if(tc_strcmp(cBomlineType,"M2_HomoTempTable") == 0 ){
+					std::string szVechClass("");
+					result = AOM_ask_value_string(rv_tag,"m2_Vehicle_Classification",&cVechClassVal);
+					szVechClass.assign(cVechClassVal);
+					
+					std::string szFuelType("");
+					result = AOM_ask_value_string(rv_tag,"m2_Fuel_Type",&cFuelTypeVal);
+					szFuelType.assign(cFuelTypeVal);
+
+					if((NULL !=cVechClassVal ) && (szVechClass.find(sMap.at(2).c_str()) != std::string::npos) && (szFuelType.find(sMap.at(3).c_str()) != std::string::npos)){	
+
+					//if(tc_strcmp(cVechClassVal,sMap.at(2).c_str()) == 0 && tc_strcmp(cFuelTypeVal,sMap.at(3).c_str()) == 0){
+						string itemName(c_name);
+
+						int pos = itemName.find_last_of("_");
+						itemName = itemName.substr(pos+1,itemName.length());
+						cloneDetailMAP.insert(make_pair(itemName,rv_tag));
+					}
+				}
+			}
+		}
+		//MEM_free(t_child_boms);
+		if(cloneDetailMAP.size() > 0){
+			chilCount = 0;
+			const char *str = NULL;
+			tag_t *t_child = NULLTAG;
+			cout<<"cloneDetailMAP.size():"<<cloneDetailMAP.size()<<endl;
+			str			= sMap[6].c_str();
+
+			tag_t		cloneItemTag		= NULLTAG;
+
+			tag_t		cloneItemRevTag		= NULLTAG,
+						t_window			= NULLTAG,
+						rule				= NULLTAG,
+						tBVRTag				= NULLTAG,
+						view_type			= NULLTAG,
+						tOutputLine			= NULLTAG;
+
+			result = ITEM_find_item(str,&cloneItemTag);
+			cout<<sMap[6];
+			cout << result<< endl;
+			//result = ITEM_find_item_in_idcontext(cloneItemID.c_str(),NULLTAG,&cloneItemTag);
+			
+			result = ITEM_ask_latest_rev(cloneItemTag,&cloneItemRevTag);
+
+			
+			result = BOM_create_window(&t_window);
+			result = CFM_find("Latest Working",&rule);
+			result = BOM_set_window_config_rule(t_window,rule);
+									//Get BOM view of above type for the latest revision of the item
+
+			result = BOM_set_window_top_line(t_window, cloneItemTag, cloneItemRevTag, NULLTAG, &tOutputLine);
+			
+			result = BOM_line_ask_all_child_lines(tOutputLine, &chilCount, &t_child);
+
+			if(chilCount > 0){
+				for(int i = 0 ;i < chilCount ; i++)
+				{
+					result = BOM_line_look_up_attribute("bl_revision", &attr);				//getting the attribute no. of bl_revision
+					result = BOM_line_ask_attribute_tag(t_child[i], attr, &rv_tag);			//getting the revision tag from the attrib no.
+					
+					result = ITEM_ask_item_of_rev(rv_tag, &c_name_tag);						//getting the item of the revision.
+					result = WSOM_ask_name2(c_name_tag, &c_name);							//getting the name of the item.
+					result = WSOM_ask_object_type2(c_name_tag,&cBomlineType);
+
+					if(tc_strcmp(cBomlineType ,"M2_HomoProjTable") == 0){
+						string cloneItemID(c_name);
+						int pos = cloneItemID.find_last_of("_");
+						cloneItemID = cloneItemID.substr(pos+1,cloneItemID.length());
+
+						map<string,tag_t>::iterator itr = cloneDetailMAP.find(cloneItemID);
+						if(itr != cloneDetailMAP.end()){
+							itr->second = rv_tag;
+						}
+					}
+				}
+			}
+			cloneDetailMAP.insert(make_pair("ROOT",cloneItemRevTag));
+		}
+	}catch (...){
+		
+	}
+	 return result;
+}
+
+int mail_write(const string mailpath,tag_t formTag)
+{
+	string m_path = "",
+		   stat = "";
+	tag_t person_tag = NULLTAG;
+	const char *project = NULL,
+		        *variant = NULL,
+				 *user = NULL;
+	char *email = NULL,
+		 *projectId = NULL,
+		 *variantId = NULL,
+		 *userId = NULL,
+		 *status = NULL;
+	m_path = mailpath;
+	std::ofstream m_File;
+	std::string sRootName(""),str;
+	AOM_ask_value_string(formTag,"m2_Project",&projectId);
+	project = projectId;
+	AOM_ask_value_string(formTag,"m2_Variants",&variantId);
+	variant = variantId;
+	AOM_ask_value_string(formTag,"m2_Requestor",&userId);
+	user = userId;
+	AOM_ask_value_string(formTag,"m2_Status",&status);
+	stat = status;
+	sRootName.assign(project);
+    sRootName.append("-");
+	sRootName.append(variant);
+	SA_find_person2(user,&person_tag);
+	SA_ask_person_email_address(person_tag,&email);
+	str = email;
+    const   string FileName = "Project_Clone_Creation_mail"+ sRootName + timeStamp + ".txt";
+	m_File.open(m_path+FileName.c_str(),  std::ofstream::out | std::ofstream::app);
+	m_File<<"from=Homologation-Admin@mahindra.com"<<endl;
+	m_File<<"to="+str<<endl;
+	m_File<<"cc="<<endl;
+	m_File<<"bcc="<<endl;
+ if(stat=="Success"){
+	m_File<<"subject="+sRootName+"-Project Created Successfully"<<endl;
+	m_File<<"body=<html><p><label style=color:#810900;font-family:Verdana;font-weight:bold;font-size:12px>Dear Sir/Madam, <br> <br>"+sRootName+ " has been Created..<br><br>Please login to Teamcenter for more details..<br></label></p><p>Thank you !<br>System generated mail. Please don't reply...</p></html>"<<endl;
+	}
+ if(stat=="Failure"){
+	m_File<<"subject="+sRootName+"-Project Failed to Create"<<endl;
+	m_File<<"body=<html><p><label style=color:#810900;font-family:Verdana;font-weight:bold;font-size:12px>Dear Sir/Madam, <br> <br>"+sRootName+ " has been Failed to Create..<br><br>Please login to Teamcenter for more details..<br></label></p><p>Thank you !<br>System generated mail. Please don't reply...</p></html>"<<endl;
+ }
+	m_File<<"attachment="<<endl;
+	m_File.close();
+	return 0;
+}
