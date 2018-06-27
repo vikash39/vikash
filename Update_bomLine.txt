@@ -1,0 +1,161 @@
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<tc\tc.h>
+#include<tc\emh.h>
+#include<tccore\aom.h>
+#include<tccore\item.h>
+#include<bom\bom.h>
+#include<tccore\aom_prop.h>
+#include<iostream>
+#include<fstream>
+#include<tc/tc_startup.h>
+#include<fclasses\tc_string.h>
+#include<map>
+#include<iterator>
+#include<array>
+
+using namespace std;
+
+// Create struct to store the values from local file.
+struct bomValues {
+	string id;
+	string name;
+};
+
+int index = 0;
+
+tag_t item_tag	= NULLTAG;
+bomValues readData[10];
+
+map <string, string> fileMap; 
+map <string, tag_t> bomLineMap; 
+
+void traverse_BOM(tag_t bomtopline_tag);
+
+int ITK_user_main(int argc, char **argv){
+
+	int iStatus	= ITK_ok;
+
+	tag_t* childrens_tag	= NULLTAG;
+	tag_t user_tag	= NULLTAG;
+	tag_t top_bom_line_tag	= NULLTAG; 
+	tag_t relationTag	= NULLTAG;
+	tag_t rev_tag = NULLTAG;
+	tag_t bom_Window_tag = NULLTAG;
+
+	char *pcError = NULL;
+	char *user_name	= NULL;
+	char *pcUserId = ITK_ask_cli_argument("-u=");
+	char *pcPaswd	= ITK_ask_cli_argument("-p=");
+	char *pcGrp = ITK_ask_cli_argument("-g=");
+
+	// TC Login
+	iStatus = ITK_auto_login();
+	printf(" Login TC successfully =%d \n",iStatus);
+
+	//BOM Create Window
+	iStatus = BOM_create_window(&bom_Window_tag);
+
+	// Read local file
+	fstream myfile;
+	string line;
+
+	myfile.open("E:\\file\\bomValue.txt");
+
+	if (myfile.is_open()) { 
+
+		for (int i = 0; i < 5; i++) {
+
+			getline(myfile, readData[i].id, ' ');		// Read key's from local file values.
+			getline(myfile, readData[i].name, '\n');	// Read values from local file values.
+
+			cout << readData[i].id << '\n';
+			cout << readData[i].name << '\n';
+
+			fileMap[readData[i].id] = readData[i].name;	// store those values into map.
+		}
+		myfile.close();	//close file.
+	}
+
+	else cout << "Unable to open file"; 
+
+	iStatus = ITEM_find_item( fileMap.find("product_id")->second .c_str(),&item_tag);
+
+	if (iStatus > 0) {
+
+		EMH_ask_error_text(iStatus, &pcError);
+		printf("\n Save Item : %d : %s", iStatus, pcError);
+		printf("error");
+	}
+	else { 
+
+		printf("\n Successfully Item found");
+	}
+
+	// BOM set window top line
+	iStatus = BOM_set_window_top_line(bom_Window_tag ,item_tag ,rev_tag ,NULLTAG,&top_bom_line_tag);
+	traverse_BOM(top_bom_line_tag);
+
+	map<string, string>::iterator fileIterator = fileMap.begin();
+
+
+	while (fileIterator != fileMap.end()) {
+		
+		map<string, tag_t>::iterator bomIterator = bomLineMap.begin();
+		while (bomIterator != bomLineMap.end()) {
+
+			string key = fileIterator->first;
+			string value = fileIterator->second;
+
+			string itemId = bomIterator->first;
+			tag_t bomLineTag = bomIterator->second;
+
+			if (tc_strcmp(key.c_str() , itemId.c_str()) == 0) {
+
+				cout << " item  matched "<< endl;
+
+				// update bom line property value
+				iStatus = AOM_set_value_string(bomLineTag,"bl_usage_address", value.c_str());
+			} else {
+
+				cout << " item not matched "<< endl;
+			}
+			bomIterator++;
+		}
+		fileIterator++;
+	}
+	return iStatus;
+}
+
+void traverse_BOM(tag_t top_bom_line_tag) {
+
+	tag_t* children_tag = NULLTAG;
+
+	int iStatus	= ITK_ok;
+	int childrens = 0;
+	char* item_id = NULL;
+	char* item_name = NULL;
+	char* item_rev = NULL;
+	char* item_add = NULL;
+
+	char * clone_stable_uids=NULL;
+
+	//BOM line ask item id
+	iStatus = AOM_ask_value_string(top_bom_line_tag,"bl_item_item_id",&item_id);
+
+	//BOM line ask child line
+	iStatus = BOM_line_ask_child_lines(top_bom_line_tag , &childrens, &children_tag);
+
+	// Store item id and bom line into map
+	bomLineMap[item_id] = top_bom_line_tag;
+
+	if(childrens > 0) { //If the item has childern
+
+		for(int j = 0; j < childrens; j ++) {
+			
+			index ++;
+			traverse_BOM(children_tag[j]); // Run recursive function to get all bom lines.
+		}
+	}
+}
