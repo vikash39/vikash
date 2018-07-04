@@ -1,0 +1,70 @@
+#include<iostream>
+#include<tc\tc_startup.h>
+#include<tcinit\tcinit.h>
+#include<tccore\item.h>
+#include<tccore\grm.h>
+#include<epm\epm.h>
+#include<tccore\aom_prop.h>
+
+
+using namespace std;
+
+inline int ITK_user_main(int argc, char* argv[])
+{
+char *userName = NULL;
+char *pwd = NULL;
+char *group = NULL;
+const char * statusType = "Released";
+char *release = NULL;
+
+char *name = NULL;
+char* revId =NULL;
+
+int status = 0;
+const char * query = "Item Revision...";
+tag_t queryTag = NULLTAG;
+char* entries[10];
+char* values[10];
+int numOfItems =0;
+tag_t* itemrevTag = NULLTAG;
+
+
+userName = ITK_ask_cli_argument("-u=");
+pwd = ITK_ask_cli_argument("-p=");
+group = ITK_ask_cli_argument("-g=");
+
+cout<<"UserName: " <<userName<<endl;
+
+status = ITK_init_module(userName, pwd, group);
+
+if(status == 0)
+{
+cout<<"Login Passed"<<endl;
+
+QRY_find2(query, &queryTag);
+
+entries[0] = "Type";
+values[0] = "Item Revision";
+
+entries[1] = "Release Status";
+values[1] = "*";
+
+entries[2] = "Owning User";
+values[2] = "izn";
+
+QRY_execute(queryTag, 3, entries, values, &numOfItems, &itemrevTag);
+
+for(int i=0; i<numOfItems;i++){
+AOM_ask_value_string(itemrevTag[i],"current_revision_id",&revId);
+AOM_ask_value_string(itemrevTag[i],"object_name",&name);
+
+cout<<"Item Name : RevisionID = "<< name << " : " << revId << endl;	
+}
+ITK_exit_module(true);
+}
+else
+{
+cout<<"Login Failed->status"<<status<<endl;
+}
+return status;
+}
