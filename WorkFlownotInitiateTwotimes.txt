@@ -1,0 +1,141 @@
+=> If workflow is initiate already initiated then it should not be initiate again.
+
+
+
+
+#include <ict\ict_userservice.h>
+#include <tcinit\tcinit.h>
+#include <tccore\custom.h>
+#include <epm\epm.h>
+#include <tccore\workspaceobject.h>
+#include<tccore\aom_prop.h>
+#include<iostream>
+#include<tccore\item.h>
+
+
+
+#define WSO_where_ref_any_depth   -1
+
+
+extern DLLAPI int register_handlers(int *decision,va_list args);
+EPM_decision_t Custom_Function_rule_handler(EPM_rule_message_t msg);
+extern "C" DLLAPI int WorkflowHandler_register_callbacks()
+{
+	CUSTOM_register_exit("WorkflowHandler","USER_init_module",(CUSTOM_EXIT_ftn_t)register_handlers);
+
+	printf("\n .........Custom_Handler DLL registered successfully................");
+
+	return ITK_ok;
+}
+
+extern DLLAPI int register_handlers(int *decision,va_list args)
+{
+	int result = ITK_ok;
+
+	*decision = ALL_CUSTOMIZATIONS;
+
+	result = EPM_register_rule_handler("MY_CUSTOM_RULE_HANDLER","SSSSSSSSSS",Custom_Function_rule_handler);
+
+	printf("\n.........handler initiated successfully............");
+
+	return result;
+}
+
+EPM_decision_t Custom_Function_rule_handler(EPM_rule_message_t msg)
+{
+	//initialization
+	int status = ITK_ok;
+	int attach_count = NULL;
+	int status_count = NULL;
+
+	tag_t job_t = NULLTAG,
+		  *job_tags = NULL;
+	tag_t root_t = NULLTAG;
+	tag_t* target = NULLTAG;
+	tag_t* status_list_t = NULLTAG;
+	tag_t rev_tag = NULLTAG;
+	tag_t property_t = NULLTAG;
+
+	tag_t item_t =NULLTAG;
+
+	char* obj_type = NULL;
+	char* stagVale = NULL;
+
+	//tag_t  stagVale  =NULLTAG;
+	
+	int n=0,
+		job_count = 0;
+	int i = 0;
+	int num = 0;
+	logical isTrue;
+	EPM_decision_t decision = EPM_go;
+
+	//getting the job
+	status = EPM_ask_job(msg.task,&job_t);
+	printf("\n.......getting the job:%d",job_t);
+
+	//getting root task
+	status = EPM_ask_root_task(job_t,&root_t);
+	printf("\n.....geeting root task...........:%d",root_t);
+
+	//asking target
+	
+	status = EPM_ask_attachments(root_t,EPM_target_attachment,&attach_count,&target);
+	printf("\n.......attachment status:%d",attach_count);
+
+	for(i=0;i<attach_count;i++)
+	{
+
+		//getting object type
+		status= WSOM_ask_object_type2(target[i],&obj_type);
+		printf("\n....getting the objr=ect type status:%d",status);
+
+		std::cout<<"object type objct  "<<obj_type <<std::endl;
+
+		if(tc_strcmp(obj_type,"ItemRevision")==0)
+		{
+			//ITEM_find_rev("000590","A",&rev_tag);
+			//ITEM_find_item("000590",&item_t);
+			//ITEM_find_revision(item_t,"A",&rev_tag);
+
+			//PROP_ask_property_by_name(rev_tag,"process_stage_list",&property_t);
+			//PROP_ask_value_string(property_t,&stagVale);
+
+
+			//status= AOM_ask_value_strings(target[i],"process_stage_list",&num, &stagVale);
+
+
+
+			//status = AOM_ask_value_tags(target[i],"process_stage_list",&num,&stagVale);
+
+			//AOM_ask_value_logical(target[i],"fnd0InProcess", &isTrue);
+
+			//status = PROP_UIF_ask_property_by_name(target[i],"fnd0MyWorkflowTasks",&stagVale);
+
+			//status= AOM_UIF_ask_value(target[i],"process_stage_list",&stagVale);
+
+			status = EPM_ask_active_job_for_target(target[i],&job_count,&job_tags);
+
+			std::cout<<"process_stage_list isTrue  =  "<<job_count <<std::endl;
+
+			//std::cout<<"process_stage_list num  =  "<<num <<std::endl;
+
+			//std::cout<<"process_stage_list =  "<<stagVale <<std::endl;
+			
+			//if(stagVale != NULLTAG)
+			if(job_count>1)
+			{
+				decision = EPM_nogo;
+				EMH_store_error_s1(9000,status,"Not allowed");
+			}
+		
+		else
+			{
+			decision = EPM_go;
+			
+			}
+		}
+	}
+
+	return decision;
+}
