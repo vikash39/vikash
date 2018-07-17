@@ -1,0 +1,34 @@
+#File name :- bmid.bat
+
+D:\app\teamcenter\bmide\client
+
+@echo off
+setlocal
+title Teamcenter Business Modeler IDE
+call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" amd64
+if not defined TC_ROOT set TC_ROOT=D:\app\teamcenter
+
+if not defined IIOP_SERVER_PATH set IIOP_SERVER_PATH=D:\app\teamcenter\iiopservers
+
+if not defined HTTP_SERVER_PATH set HTTP_SERVER_PATH=~your_httpserver_dir~
+
+if exist "%TC_ROOT%\install\tem_init.bat" call "%TC_ROOT%\install\tem_init.bat"
+
+set JRE_HOME=C:\Program Files\Java\jre1.8.0_101
+set JAVA_HOME=C:\Java\jdk1.8.0_131
+set JDK_HOME=C:\Java\jdk1.8.0_131
+set FMS_HOME=D:\app\teamcenter\tccs
+set VS_PATH=C:\PROGRA~2\MICROS~1.0\VC
+call C:\PROGRA~2\MICROS~1.0\VC\vcvarsall.bat x86_amd64
+set PATH=%JRE_HOME%\bin;%JDK_HOME%\bin;%TC_ROOT%\lib;%FMS_HOME%\bin;%FMS_HOME%\lib;%FMS_HOME%;%PATH%;%VS_PATH%\bin\x86_amd64
+
+
+
+@echo Starting Teamcenter Business Modeler IDE...
+IF EXIST BusinessModelerIDE.exe (
+start BusinessModelerIDE.exe %*
+) ELSE (
+start %TC_ROOT%\bmide\client\BusinessModelerIDE.exe %*
+)
+
+endlocal
