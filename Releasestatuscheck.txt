@@ -1,0 +1,107 @@
+Create Extension on ITEM_copy_rev
+
+
+//@<COPYRIGHT>@
+//==================================================
+//Copyright $2018.
+//Siemens Product Lifecycle Management Software Inc.
+//All Rights Reserved.
+//==================================================
+//@<COPYRIGHT>@
+
+/* 
+ * @file 
+ *
+ *   This file contains the implementation for the Extension IZ3ReviseItemRevision
+ *
+ */
+#include "IZ3ReviseItemRevision.hxx"
+#include <iostream>
+#include <tccore\grm.h>
+#include <epm\epm.h>
+#include <tccore\aom_prop.h>
+
+int IZ3ReviseItemRevision( METHOD_message_t * msg, va_list args )
+{
+	std::cout<<"Release status uploaded extension "<<std::endl;
+
+	int ifail =ITK_ok;
+
+	int releasedStatus = NULL;
+	int count1 = 0;
+	char *statusname = NULL;
+
+	tag_t *relStatusType = NULLTAG;
+
+	tag_t source_rev   = NULLTAG;
+	tag_t relation_tag = NULLTAG;
+	tag_t statusType_tag = NULLTAG;
+
+	source_rev = va_arg(args, tag_t);
+
+
+	ifail =  EPM_ask_if_released(source_rev,&releasedStatus);
+
+	std::cout<<"releasedStatus = "<<releasedStatus<<std::endl;
+
+	EPM_find_status_type("TCM Released",&statusType_tag);
+
+	//AOM_ask_value_string(source_rev,"release_status_list", &relStatus_tag);
+
+	WSOM_ask_release_status_list(source_rev,&count1,&relStatusType);
+
+	 //AOM_ask_value_strings(source_rev,"release_status_list", &count1, &relStatusType);
+
+	 std::cout<<"release_status_list Count  = "<<count1<<std::endl;
+	
+	for(int i=0; i<count1; i++){
+
+		
+		AOM_ask_value_string(relStatusType[i],"object_name",&statusname);
+		//WSOM_ask_name2(relStatusType[i],&statusname);
+
+		std::cout<<"release_status_list  statusname  = "<<statusname<<std::endl; 
+	}
+
+	if(tc_strcmp("Released",statusname) == 0){
+
+		std::cout<<"You can only revise "<<std::endl;
+	}else{
+
+		std::cout<<" You can not revised."<<std::endl;
+		 EMH_store_error(EMH_severity_error, 919003);
+		 return 919003;
+
+	}
+
+
+
+
+
+
+	/*
+		if(tc_strcmp("TCM Released",statusname) == 0){
+
+		std::cout<<"Item Revesion is already released. So You can not revise "<<std::endl;
+		 EMH_store_error(EMH_severity_error, 919003);
+		 return 919003;
+	}
+	
+	
+
+	if(releasedStatus == 0){
+
+		std::cout<<" You can not revise. Because There is no release status"<<std::endl;
+		 EMH_store_error(EMH_severity_error, 919003);
+		 return 919003;
+
+	
+
+	}else{
+		std::cout<<"Item Revesion is not released. So You can revise "<<std::endl;
+	
+
+	}  */
+ return 0;
+
+}
