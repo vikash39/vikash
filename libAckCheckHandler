@@ -1,0 +1,138 @@
+
+Handler name :- libAckCheckHandler
+
+=> Handler to check if MCN is created and attached to the CR which this ECN is also attached to.
+
+
+#include<tc\tc.h>
+#include "ac_register_user_exit.h"
+
+#include<ict/ict_userservice.h>
+#include<tccore\custom.h>
+#include<epm/epm.h>
+#include<epm\epm_toolkit_tc_utils.h>
+#include<tccore\project.h>
+#include<vector>
+#include<tccore\aom_prop.h>
+
+EPM_decision_t Arcelik_Rule_Handler(EPM_rule_message_t msg)
+{ 
+	
+	
+
+	int ifail=ITK_ok; //Function return code
+	int arg_count=0;
+	int i=0;
+	int countImp   = 0;
+	int countImpBy = 0;
+	int count = 0;
+	int attach_count = 0;
+
+	tag_t  job                 = NULLTAG;
+	tag_t  root_task           = NULLTAG;
+	tag_t* target_attachments  = NULLTAG;
+	tag_t  grmImp_tag          = NULLTAG;
+	tag_t* sec_objImp_tag      = NULLTAG;
+	tag_t* sec_objImpBy_tag     = NULLTAG;
+	tag_t  grmSolu_tag         = NULLTAG;
+
+	char *arg_attr_name = NULL;
+	char **arg_keys     = NULL;
+	char **arg_values   = NULL;
+	char* ac_impl       = NULL;
+	char* ac_implby     = NULL;
+	char* id            = NULL;
+	char* id1           = NULL;
+
+
+	char obj_type[WSO_name_size_c+1]="";
+
+	EPM_decision_t epm_go   = EPM_go;
+	EPM_decision_t epm_nogo = EPM_nogo;
+
+	TC_write_syslog("Check MCN attached in implementedby folder or not rule_handler\n");
+
+	//Get the job tag
+	ifail=EPM_ask_job(msg.task,&job);
+
+	//Get the root task tag
+	ifail=EPM_ask_root_task(job,&root_task);
+
+	/*Asks the handler argument that are added in the workflow */
+	ifail=EPM_args_process_args(msg.task,msg.arguments,&arg_count,&arg_keys,&arg_values);
+
+	for(count=0;count<arg_count;count++)
+	{
+		/*Keys are matched and the memory is allocated and the values are stored */
+
+		if(tc_strcmp(arg_keys[count],"Project_ID")==0)
+		{
+			arg_attr_name=(char*) MEM_alloc(((int)strlen(arg_values[count])+1)*sizeof(char));
+			tc_strcpy(arg_attr_name,arg_values[count]);
+
+		}
+	
+	}
+	if(tc_strlen(arg_attr_name)==0)
+	{
+		//Throw an error if required
+		TC_write_syslog("Arg value is empty\n");
+	}
+
+	// Get the Target attachments of the root task
+	ifail=EPM_ask_attachments(root_task,EPM_target_attachment,&attach_count,&target_attachments);
+
+
+	ifail = GRM_find_relation_type("CMImplements",&grmImp_tag);
+	
+
+	for(int i=0;i<attach_count;i++){
+
+		ifail = GRM_list_secondary_objects_only(target_attachments[i],grmImp_tag,&countImp, &sec_objImp_tag);
+	}
+
+	for(int i=0;i<countImp;i++){
+		AOM_ask_value_string(sec_objImp_tag[i],"object_type",&ac_impl);
+
+		AOM_ask_value_string(sec_objImp_tag[i],"item_id",&id);
+	    std::cout<<"Implemented CR Object type :- "<<ac_impl<<std::endl;
+		std::cout<<"Iteam id  :- "<<id<<std::endl;
+	}
+	
+	 if(tc_strcmp(ac_impl,"AR3ChangeRequestRevision")==0){
+		 epm_go;
+
+	 }else{
+			EMH_store_error(EMH_severity_error, 919003);
+		     return epm_nogo;
+	 }
+	
+	ifail = GRM_find_relation_type("CMImplementedBy",&grmSolu_tag);
+
+	for(int i=0;i<countImp;i++){
+		//ifail = GRM_list_secondary_objects_only(sec_objImp_tag[i],grmSolu_tag,&countSolu, &sec_objSolu_tag);
+		AOM_ask_value_tags(sec_objImp_tag[i],"CMImplementedBy",&countImpBy, &sec_objImpBy_tag);
+	}
+
+	 
+	    
+		for(int i=0;i<countImpBy;i++){
+			AOM_ask_value_string(sec_objImpBy_tag[i],"object_type",&ac_implby);
+			AOM_ask_value_string(sec_objImpBy_tag[i],"item_id",&id1);
+
+		    std::cout<<"Implemented By object type :- "<<ac_implby<<std::endl;
+		    std::cout<<"Item id  :- "<<id1<<std::endl;
+		    std::cout<<" countSolu :- "<<countImpBy<<std::endl;
+		}
+	 
+		
+	if(tc_strcmp(ac_implby,"AR3ChangeOrderRevision")==0){
+		 epm_go;
+
+	 }else{
+			EMH_store_error(EMH_severity_error, 919004);
+		     return epm_nogo;
+	 } 
+	
+		return epm_go;
+}
