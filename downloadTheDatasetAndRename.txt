@@ -1,0 +1,177 @@
+
+/* 
+ * @Author :- Vikash 
+ *
+ *   This file contains the implementation for the Download the dataset named reference file
+ *
+ */
+#include <iostream>
+#include <cstdio>
+#include <tccore\grm.h>
+#include <epm\epm.h>
+#include <TCCORE_API\workspaceobject.h>
+#include <AE_API\datasettype.h>
+#include <AE_API\dataset.h>
+
+using namespace std;
+// Main function to taking input from teamcenter using message passing argument.
+
+int IZCheckReleaseStatusAndDownloadTheNamedReference( METHOD_message_t * msg, va_list args )
+{
+
+	int ifail =ITK_ok;
+
+ 	int prop_count =NULL,
+        n_statuses = NULL;
+
+	tag_t itemRevTag   = NULLTAG,
+	      relationTag = NULLTAG;
+	
+	const char *destPathName = NULL;
+
+	itemRevTag = va_arg(args, tag_t);
+	relationTag = va_arg(args, tag_t);
+	destPathName = va_arg(args, const char*);
+	
+	
+
+	ifail =  EPM_ask_if_released(itemRevTag,&n_statuses);
+
+	std::cout<<"n_statuses = "<<n_statuses<<std::endl;
+
+	if(n_statuses == 0){
+
+		std::cout<<"Item Revesion has no any release status "<<std::endl;
+		 EMH_store_error(EMH_severity_error, 919003);
+		 return 919003;
+
+	}else{
+	
+		getDownloadedTheNameReferenced(itemRevTag, destPathName);
+	}
+
+ 
+ return 0;
+
+}
+
+
+/* This function is taking revision id and asking the release properties & checking the release status (Production Release or Proto Release)
+if it has Production Release then find the relation (IMAN_manifestation relation) then get the dataset name reference, if single named reference then 
+download the dataset named reference in this formate" <ID><REVID>.<extension>", if Multiple named Reference then download the named reference in this formate "<ID>SHT<NO><REVID>.<extension>" 
+with predefine location. & same for "Proto Release". */
+
+int getDownloadedTheNameReferenced( tag_t itemRevTag, const char *destPathName) {
+    
+    int ifail = ITK_ok,
+		property_count = 0,
+        ii,
+		iRefCount = 0,
+		iCount = 0;
+	
+	tag_t relationTag = NULLTAG,
+	      dataSetTypeTag = NULLTAG,
+	      refObjectTag = NULLTAG,
+	     *sSecObjectTag = NULLTAG;
+    
+    char  **property_names = NULL,
+	      **cRefList = NULL,
+	      *sDataSetId = NULL,
+	      *sDataSetRev = NULL;
+
+	//AE_reference_type_t my_ref_type;
+    
+    // Get all the property names and property count
+    ifail = AOM_ask_value_strings(itemRevTag, "release_status", &property_count, &property_names);
+     
+    if(property_count == 0){
+		for (ii = 0; ii < property_count; ii++) {
+			// Only process the "release_stauses" list
+			if (strcmp(property_names[ii], "Production_Release")) {
+			
+				ifail = GRM_find_relation_type("IMAN_manifestation", &relationTag);
+				ifail = GRM_list_secondary_objects_only(itemRevTag, relationTag, &iCount, &sSecObjectTag);
+			
+				for(int i=0; iCount>i; i++){
+				//AE_ask_dataset_ref_count(sSecObjectTag[i], &iRefCount);
+				ifail = AE_ask_datasettype_refs(sSecObjectTag[i], &iRefCount, &cRefList);
+					if(iRefCount == 1){
+						ifail = AE_export_named_ref(sSecObjectTag[i], cRefList[i], destPathName);
+					}
+					else
+					{
+						ifail = AE_export_named_ref(sSecObjectTag[i], cRefList[i], destPathName);
+						dataSetStandardRename(directoryPath, "SHT");
+					}
+				}
+			}
+			else if (strcmp(property_names[ii], "Proto_Release")) {
+		
+				ifail = GRM_find_relation_type("IMAN_manifestation", &relationTag);
+				ifail = GRM_list_secondary_objects_only(itemRevTag, relationTag, &iCount, &sSecObjectTag);
+				
+				for(int i=0; iCount>i; i++){
+				//AE_ask_dataset_ref_count(sSecObjectTag[i], &iRefCount);
+				ifail = AE_ask_datasettype_refs(sSecObjectTag[i], &iRefCount, &cRefList);
+					if(iRefCount == 1){
+						ifail = AE_export_named_ref(sSecObjectTag[i], cRefList[i], destPathName);
+						dataSetStandardRename(directoryPath, "PROTO");
+					}
+					else
+					{
+						ifail = AE_export_named_ref(sSecObjectTag[i], cRefList[i], destPathName);
+						dataSetStandardRename(directoryPath, "PROTOSHT");
+					}
+				}
+			}
+			else {
+				std::cout<<"Item revision has no any release "Production Release or Proto_Release", Please release first "<<std::endl;
+			}
+		}
+	}
+	else {
+		std::cout<<"Item revision has no any release "Production Release or Proto_Release", Please release first "<<std::endl;
+	}
+
+    
+    
+    return 0;
+}
+
+
+//-----------------------------------------------------------------
+/** This function will rename the dataset name **/
+
+void dataSetStandardRename(const char* directoryPath, string sRepStr )
+{   
+    int i = 1;
+	string str = "/";
+	string sNewName = "";
+	string sOldName = "";
+	char* oldname = NULL:
+	struct dirent *pent;
+	
+	if ((pdir = opendir (directoryPath)) != NULL) {
+		while (pent = readdir (pdir))
+		{
+			oldname = pent->d_name;
+			sNewName = oldname.c_str();
+			std::string sReplaceStr = sRepStr+std::to_string(i)+"/";
+			sNewName.replace(sNewName.find(str),str.length(),sReplaceStr);
+			
+			sOldName = oldname.c_str();
+			std::rename(sOldName, sNewName);
+			i++;
+		}   
+	}else
+	{
+		/* could not open directory */
+		return EXIT_FAILURE;
+	}
+    
+}
+
+
+
+
+
