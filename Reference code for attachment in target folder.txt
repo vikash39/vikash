@@ -1,0 +1,162 @@
+
+int dnvgl_attach_projects_from_rateschedule_copies( EPM_action_message_t msg )
+
+{
+
+    int        iStatus                = ITK_ok    ;
+
+ 
+
+    tag_t*  tpTargetTags        = NULL ;
+
+    tag_t * tCopiedRateSchObjs  = NULL;
+
+    tag_t * tProjectRevObjs     = NULL ;
+
+    std::vector<tag_t> vtProjectRev ;
+
+ 
+
+    DNVGL_TRACE_ENTER();
+
+    try
+
+    {
+
+        tag_t tCurrentTask = msg.task;
+
+        DNVGL_TRACE_AND_THROW( iStatus = EMH_clear_errors() );
+
+ 
+
+        //Get root task.
+
+        tag_t tRootTask = NULLTAG;
+
+        DNVGL_TRACE_AND_THROW( iStatus = EPM_ask_root_task( msg.task, &tRootTask ) );
+
+ 
+
+        //Get target objects.
+
+        int    iTargetCount = 0;
+
+        DNVGL_TRACE_AND_THROW( iStatus = EPM_ask_attachments( tRootTask, EPM_target_attachment, &iTargetCount, &tpTargetTags ) );
+
+ 
+
+        //Get the IMAN_Based_On relation type.
+
+        tag_t tImanBasedOnRelation = NULLTAG;
+
+        DNVGL_TRACE_AND_THROW( iStatus = GRM_find_relation_type( IMAN_BASED_ON, &tImanBasedOnRelation ) );
+
+ 
+
+        for( int i=0; i<iTargetCount; i++ )
+
+        {
+
+            // create smart pointer/reference for tag
+
+            BusinessObjectRef<Teamcenter::BusinessObject> targetObjRef(tpTargetTags[i]);
+
+            string targetObjType = targetObjRef->getTypeName();
+
+ 
+
+            //check for target object type is AP4_RateSchedule.
+
+            if( targetObjType.compare(AP4_RATESCHEDULE ) == 0 )
+
+            {
+
+                int iCopiedRateSchCount = 0;    
+
+                //Get all Primary objects (copies of rate schedules) attached to Main rate schedule from IMAN_BASED_ON relation.
+
+                DNVGL_TRACE_AND_THROW( iStatus = GRM_list_primary_objects_only( tpTargetTags[i], tImanBasedOnRelation, &iCopiedRateSchCount, &tCopiedRateSchObjs ) );
+
+ 
+
+                for ( int inx = 0; inx < iCopiedRateSchCount; inx++ )
+
+                {
+
+                    tag_t tAP4_ProjectRateScheRelation = NULLTAG;
+
+                    int iProjectRevCount = 0;
+
+ 
+
+                    //Get the AP4_PROJECTRATESCHERELATION relation type.
+
+                    DNVGL_TRACE_AND_THROW( iStatus = GRM_find_relation_type( AP4_PROJECTRATESCHERELATION, &tAP4_ProjectRateScheRelation ) );
+
+ 
+
+                    //Get all primary objects (Project Revision) attached under each Copies of rate schedules using AP4_PROJECTRATESCHERELATION relation.
+
+                    DNVGL_TRACE_AND_THROW( iStatus = GRM_list_primary_objects_only( tCopiedRateSchObjs[inx], tAP4_ProjectRateScheRelation, &iProjectRevCount, &tProjectRevObjs ) );
+
+ 
+
+                    for (int cnt = 0; cnt < iProjectRevCount; cnt++)
+
+                    {
+
+                        //Push all project revisions into vector
+
+                        vtProjectRev.push_back(tProjectRevObjs[cnt]);
+
+                    }
+
+ 
+
+                    DNVGL_MEM_FREE( tProjectRevObjs );
+
+                }
+
+ 
+
+                // free
+
+                DNVGL_MEM_FREE( tCopiedRateSchObjs );
+
+            }
+
+        }
+
+ 
+
+        // create a vector of ref attachments with equal size as projec vector and all elemens values as EPM_reference_attachment
+
+        vector<int> vAttachTypes(vtProjectRev.size(), EPM_reference_attachment );
+
+ 
+
+        //Attach array of Project revisions as attachments under reference in root task. 
+
+        DNVGL_TRACE_AND_THROW( iStatus = EPM_add_attachments( tRootTask, static_cast<int>( vtProjectRev.size() ), &vtProjectRev.front(), &vAttachTypes.front() ) );
+
+    }
+
+    catch( ... )
+
+    {
+
+    }
+
+ 
+
+    DNVGL_MEM_FREE( tpTargetTags );
+
+ 
+
+    DNVGL_TRACE_LEAVE_RVAL(  "%d", iStatus );
+
+    return iStatus;
+
+}
+
+ 
