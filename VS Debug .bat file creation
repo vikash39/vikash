@@ -1,0 +1,8 @@
+@echo off
+@echo setting TCE Variables
+SET TC_ROOT=D:\Siemens\Teamcenter12
+SET TC_DATA=D:\Siemens\tcdata
+call %TC_DATA%\tc_profilevars
+
+@echo Launching Visual Studio
+call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\WDExpress.exe"
